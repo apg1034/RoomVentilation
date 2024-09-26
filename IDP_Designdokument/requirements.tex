@@ -4,24 +4,54 @@
 
 \subsection{Safety related requirements}
 
-
-
-
 	\begin{enumerate}[label*=\arabic*.]
 		\item \label{req.1}  Requirement: \\
 		At program start all safety related functions must be tested.  \\
-		Folge Requirements: \ref{req.1.1} , \ref{req.1.2}  
 		\begin{enumerate}[label*=\arabic*.]
-			\item \label{req.1.1}  Requirement  \\
-			At program start the LED indicating an error must be tested.\ref{req.2}\\ 
-			\item \label{req.1.2} Requirement   \\
-			At program start the USART sending error messages must be tested.\\ 
+			\item \label{req.1.1}  Requirement:  \\
+			If an error occurs during program start, this must be indicated by an LED (flashing at 1 second intervals)\\ 
+			\item \label{req.1.2} Requirement:   \\
+			Communication between Raspberry and Arduino must be established.\\ 
+			\item \label{req.1.3} Requirement:   \\
+			When the system starts, the window must be successfully opened and closed once.\\    
 		\end{enumerate}
-		\item \label{req.2} Requirement:   \\
-		\item \label{req.3} Requirement:   
+		\item \label{req.2}  Requirement:  \\
+         The values of the CO2 sensor must be continuously checked for their validity \ref{hazc.1}: \\
+  	\begin{enumerate}[label*=\arabic*.]
+			\item \label{req.2.1}  Requirement:  \\
+			If the sensor value is outside the typical range, the value must be marked as invalid.\\ 
+   		\item \label{req.2.1}  Requirement:  \\
+			If the sensor values are invalid an email must be sent.\\
+	  \end{enumerate}
+		\item \label{req.3}  Requirement:  \\
+            It must be checked whether the window has been opened or closed sufficiently \ref{hazc.2}:  \\
+  	\begin{enumerate}[label*=\arabic*.]
+			\item \label{req.3.1}  Requirement:  \\
+			If the measured position of the stepper motor deviates by 5 mm when opening, the motor must stop immediately and go into error state (obstacle was detected).\\ 
+   		\item \label{req.3.2}  Requirement:  \\
+			If the measured position of the stepper motor deviates by 5 mm when closing, the motor must stop immediately and the window must open again (obstacle has been detected).\\
+   		\item \label{req.3.3}  Requirement:  \\
+			If an obstacle is detected during opening or closing, the system must report an error (email and LED).\\   
+	  \end{enumerate}  
+        \item \label{req.4}  Requirement:  \\
+        It must be checked whether the Arduino is working properly \ref{hazc.1}: \\
+  	\begin{enumerate}[label*=\arabic*.]
+			\item \label{req.4.1}  Requirement:  \\
+			The communication between Raspberry and Arduino must be checked cyclically (10 second interval).\\  
+			\item \label{req.4.1}  Requirement:  \\
+            If the communication between the Raspberry and the Arduino is interrupted for more than 30 seconds, the system must go into error state (Email and LED).\\     
+	  \end{enumerate}         
 	\end{enumerate}
 
 \subsection{Security related requirements}
-
-
+    \begin{enumerate}[label*=\arabic*.]
+        \item \label{sreq.1}  Requirement:  \\
+        The communication between the Raspberry and the Arduino must be encrypted. \\ 
+        \item \label{sreq.2}  Requirement:  \\
+        The Raspberry PI must be hardened against cybersecurity attacks. \\ 
+    \end{enumerate}         
 \subsection{Requirements with no influence on Safety and Security}
+    \begin{enumerate}[label*=\arabic*.]
+        \item \label{qreq.1}  Requirement:  \\
+        The system should be installed in an inaccessible location. \\ 
+    \end{enumerate} 
