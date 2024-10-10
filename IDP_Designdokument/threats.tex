@@ -3,17 +3,34 @@
 
 \subsection{Identified threats and countermeasures}
 
-
 	\begin{enumerate}
-		\item Threat 1: 
-		\item Threat 2:
-		\item Threat 3:
+		\item  \textbf{Threat 1:}
+            Someone could manipulate the window this way, intentionally or unintentionally
+            that it no longer closes after opening. This could result in a break-in
+            consequences. \\ \\         
+             \textbf{Mitigation:}
+            The device carries out a self-test when commissioning (open 1 x and close 1 x)
+		\item \textbf{Threat 2}:
+            The window couldn't open because someone put something in front of the window.
+            This means there is no ventilation. The system no longer works.\\ \\
+            \textbf{Mitigation:}
+            Refer to mitigation of Threat 1:
+		\item \textbf{Threat 3}:
+            DoS: Someone could carry out a DoS attack on the Rasperry PI. This will
+            prevents emails from being sent.\\ \\
+            \textbf{Mitigation:}
+            Installation of a firewall. This means that the Rasperry PI cannot be reached from outside.
 	\end{enumerate}
 	
 \subsection{Identified threats without countermeasures}
 
 	\begin{enumerate}
-		\item Threat 1: 
-		\item Threat 2:
-		\item Threat 3:
+		\item \textbf{Threat 1:} 
+            Someone could try to deliberately trigger the CO 2 sensor. This will open the window
+            opened and a break-in could be carried out through the window.  
+		\item \textbf{Threat 2:}
+            Someone could install a jammer and thus disrupt the connection between Rasperry PI and Arduino and thus, for example, prevent the window from closing
+            to carry out a break-in.
+		\item \textbf{Threat 3:}
+            Someone could install a jammer and prevent the safety circuit from tripping. This means the system no longer works.            
 	\end{enumerate}
