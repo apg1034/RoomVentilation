@@ -2,56 +2,110 @@
 \label{chapter4}
 
 
+
 \subsection{Safety related requirements}
 
 	\begin{enumerate}[label*=\arabic*.]
-		\item \label{req.1}  Requirement: \\
-		At program start all safety related functions must be tested.  \\
+		\item \label{req.1}  Requirement: Inital Connection Handling \\
 		\begin{enumerate}[label*=\arabic*.]
 			\item \label{req.1.1}  Requirement:  \\
-			If an error occurs during program start, this must be indicated by an LED (flashing at 1 second intervals)\\ 
+			If an error occurs during program start at the Arduino, this must be indicated by an LED (LED OFF)\\ 
 			\item \label{req.1.2} Requirement:   \\
-			Communication between Raspberry and Arduino must be established.\\ 
+			If no error occurs during program start at the Arduino, this must be indicated by an LED (LED ON)\\ 
 			\item \label{req.1.3} Requirement:   \\
-			When the system starts, the window must be successfully opened and closed once.\\    
+			If no error occurs during program start at the Raspberry Pi, this must be indicated by an LED (LED ON)\\    
+			\item \label{req.1.4} Requirement:   \\
+			If an error occurs during program start at the Raspberry Pi, this must be indicated by an LED (LED OFF)\\    
+			\item \label{req.1.5} Requirement:   \\
+			If the Arduino stops communicating with Raspberry Pi, the Raspberry Pi must send an email to the system administrator after connection-retries are unsuccessful for 30 seconds.\\    
+   			\item \label{req.1.6} Requirement:   \\
+            Connection-retries must be sent every 10 seconds.\\
+			\item \label{req.1.7} Requirement:   \\
+            When the connection is established initially and the devices are communicating, the window must be successfully opened and closed once as a mechanical functionality test.\\
 		\end{enumerate}
-		\item \label{req.2}  Requirement:  \\
-         The values of the CO2 sensor must be continuously checked for their validity \ref{hazc.1}: \\
+		\item \label{req.2}  Requirement:  Invalid Value Handling\\
   	\begin{enumerate}[label*=\arabic*.]
 			\item \label{req.2.1}  Requirement:  \\
-			If the sensor value is outside the typical range, the value must be marked as invalid.\\ 
+			Every measured value of the CO2 sensor must be checked for their validity by the Arduino.\\ 
    		\item \label{req.2.2}  Requirement:  \\
-			If the sensor values are invalid an email must be sent.\\
+			If the measured value differentiates more than 50 ppm from the average of the 5 previous values, the value is marked as invalid.\\
+   		\item \label{req.2.3}  Requirement:  \\
+			If the sensor value is marked as invalid, the value must be dropped.\\
 	  \end{enumerate}
-		\item \label{req.3}  Requirement:  \\
-            It must be checked whether the window has been opened or closed sufficiently \ref{hazc.2}:  \\
+		\item \label{req.3}  Requirement:    Communication between devices  \\
   	\begin{enumerate}[label*=\arabic*.]
 			\item \label{req.3.1}  Requirement:  \\
-			If the measured position of the stepper motor deviates by 5 mm when opening, the motor must stop immediately and go into error state (obstacle was detected).\\ 
+			  For every message sent between the Raspberry Pi and the Arduino, the receiving device must send an acknowledgement-message to the original sender.\\
    		\item \label{req.3.2}  Requirement:  \\
-			If the measured position of the stepper motor deviates by 5 mm when closing, the motor must stop immediately and the window must open again (obstacle has been detected).\\
+			If the Arduino doesn't get an acknowledgement-message for one of his status messages, it must resend this message.\\
    		\item \label{req.3.3}  Requirement:  \\
-			If an obstacle is detected during opening or closing, the system must report an error (email and LED).\\   
+			Not acknowledged resend-messages must be sent every 10 seconds.\\
+   		\item \label{req.3.4}  Requirement:  \\
+			If 1 following resend-messages are not acknowledged, an LED on the Arduino must start blinking.\\ 
 	  \end{enumerate}  
-        \item \label{req.4}  Requirement:  \\
-        It must be checked whether the Arduino is working properly \ref{hazc.1}: \\
+        \item \label{req.4}  Requirement: Operating the window \\
   	\begin{enumerate}[label*=\arabic*.]
 			\item \label{req.4.1}  Requirement:  \\
-			The communication between Raspberry and Arduino must be checked cyclically (10 second interval).\\  
-			\item \label{req.4.1}  Requirement:  \\
-            If the communication between the Raspberry and the Arduino is interrupted for more than 30 seconds, the system must go into error state (Email and LED).\\     
+            It must be checked whether the window has been opened or closed sufficiently, by comparing the measured end-position of the stepper motor with the value of a fully opened or closed window\\  
+			\item \label{req.4.2}  Requirement:  \\
+            If the measured end-position of the stepper motor deviates by 1 cm from the value of a fully opened window when opening, the motor must stop immediately and go back into its starting position.\\   
+			\item \label{req.4.3}  Requirement:  \\
+			If the measured end-position of the stepper motor deviates by 1 cm from the value of a fully closed window when closing, the motor must stop immediately and go back into its starting position.\\  
+			\item \label{req.4.4}  Requirement:  \\
+		      After the stepper motor has to reset to his starting position when opening or closing the window, it must retry the opening or closing process a second time after 10 seconds.\\  
+			\item \label{req.4.5}  Requirement:  \\
+			If the opening or closing process of the windows doesn't work a second time an error has to be displayed by the Raspberry Pi through an blinking LED.\\  
 	  \end{enumerate}         
 	\end{enumerate}
 
+
+ 
+
 \subsection{Security related requirements}
     \begin{enumerate}[label*=\arabic*.]
-        \item \label{sreq.1}  Requirement:  \\
-        The communication between the Raspberry and the Arduino must be encrypted. \\ 
-        \item \label{sreq.2}  Requirement:  \\
-        The Raspberry PI must be hardened against cybersecurity attacks. \\ 
+        \item \label{sreq.1} Spoofing Requirement:  \\
+        Both devices (Arduino and Raspberry Pi) must share a pre-shared key (PSK), which is used for authentication and integrity verification. For each communication, the sender computes an HMAC using the message and the secret key. The receiver uses the same key to validate the HMAC. \\ 
+        To exchange the key, both devices must use the Diffie-Hellman key exchange.\\
+        Both devices must have a unique device ID that is checked to ensure that only authenticated devices are allowed to communicate.\\
+        \item \label{sreq.2} Tampering Requirement:  \\
+        Each message between the Arduino and Raspberry Pi must be accompanied by an HMAC to verify whether the message has been altered during transmission. \\ 
+        Unauthorized physical access of the Raspberry Pi or Arduino should be prevented.\\
+        \item \label{sreq.3} Repudiation Requirement:  \\
+        Each sent and received packet must be logged with timestamps on the Arduino and the Raspberry Pi. \\ 
+        Critical actions, such as opening and closing the windows, must also be logged.\\
+        \item \label{sreq.4} Information Disclosure Requirement:  \\
+        The communication over the Bluetooth connection between the Raspberry Pi and the arduino must be encrypted via AES-CBC-128. \\
+        The successful encryption must be verified. This could be done by sending an encrypted default string with the data for the devices to verify the encryption.\\
+        \item \label{sreq.5} Denial of Service Requirement:  \\
+        The Raspberry Pi must accept no more than 1 message every 9 seconds from the Arduino to prevent flooding attacks. \\
+        The Arduino must only wait for 1 acknowledgement message after sending a data message to the Raspberry Pi.\\
+        The Arduino must ignore all other received acknowledgement messages.\\
+        \item \label{sreq.2} Elevation of Privilege Requirement:  \\
+        There is a minimum length for the password of 12 characters. This guarantees a strong password which will make it hard for attackers to take over control of the administrators account.\\ 
     \end{enumerate}         
+
+
+
 \subsection{Requirements with no influence on Safety and Security}
     \begin{enumerate}[label*=\arabic*.]
         \item \label{qreq.1}  Requirement:  \\
-        The system should be installed in an inaccessible location. \\ 
+        The Raspberry Pi must be waiting for the Arduino to establish a Bluetooth Connection. \\ 
+        \item \label{qreq.2}  Requirement:  \\
+        The Adruino must initiate a Bluetooth Connection to the corresponding Raspberry Pi. \\ 
+        \item \label{qreq.3}  Requirement:  \\
+        If Bluetooth communication fails (no acknowledgment received), the Raspberry Pi must attempt to reconnect up to 3 times. \\ 
+        \item \label{qreq.4}  Requirement:  \\
+        If the reconnection fails, a visual signal (blinking LED) will be triggered, and the system will wait 10 seconds before retrying. \\ 
+        \item \label{qreq.5}  Requirement:  \\
+        The Arduino with the CO2 sensor must measure the current CO2 levels every 10 seconds and evaluate the value. \\ 
+        \item \label{qreq.6}  Requirement:  \\
+        The Raspberry Pi must control the motor to open and close the windows and switches the fan on or off based on the sent status of the Arduino.\\ 
+        \item \label{qreq.7}  Requirement:  \\
+        The Arduino must communicate the current status to the Raspberry Pi (OPEN, CLOSE, IDLE).\\ 
+        \item \label{qreq.8}  Requirement:  \\
+        When instructed by the Arduino via receiving an OPEN-Status, the Raspberry Pi must open the window, start the fan and enter the Alarm state. This is triggered after measuring 10 values that are 5 ppm higher than the average.\\ 
+        \item \label{qreq.9}  Requirement:  \\
+        When instructed by the Arduino via receiving a CLOSE-Status, the Raspberry Pi must close the window, stop the fan and revert back to the Idle state. This happens when 10 values are measured that are within 2 ppm of the average. \\ 
+        
     \end{enumerate} 
+    
