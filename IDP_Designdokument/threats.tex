@@ -5,32 +5,25 @@
 
 	\begin{enumerate}
 		\item  \textbf{Threat 1:}
-            Someone could manipulate the window this way, intentionally or unintentionally
-            that it no longer closes after opening. This could result in a break-in
-            consequences. \\ \\         
+            An attacker can make a log lose or confuse data. \\ \\         
              \textbf{Mitigation:}
-            The device carries out a self-test when commissioning (open 1 x and close 1 x)
+            There must be logs with timestamps.
 		\item \textbf{Threat 2}:
-            The window couldn't open because someone put something in front of the window.
-            This means there is no ventilation. The system no longer works.\\ \\
+            An attacker can alter the data that is sent back and forth.\\ \\
             \textbf{Mitigation:}
-            Refer to mitigation of Threat 1:
+            Each message between the Arduino and Raspberry Pi must be accompanied by an HMAC.
 		\item \textbf{Threat 3}:
-            DoS: Someone could carry out a DoS attack on the Rasperry PI. This will
-            prevents emails from being sent.\\ \\
+            An Attacker carry out a DoS attack on the Raspberry Pi.\\ \\
             \textbf{Mitigation:}
-            Installation of a firewall. This means that the Rasperry PI cannot be reached from outside.
-	\end{enumerate}
+            The Raspberry Pi must accept no more than 1 message every 9 seconds from the Arduino to prevent flooding attacks.	\end{enumerate}
 	
 \subsection{Identified threats without countermeasures}
 
 	\begin{enumerate}
 		\item \textbf{Threat 1:} 
-            Someone could try to deliberately trigger the CO 2 sensor. This will open the window
-            opened and a break-in could be carried out through the window.  
+            An attacker can force data through different validation paths which give different results. 
 		\item \textbf{Threat 2:}
-            Someone could install a jammer and thus disrupt the connection between Rasperry PI and Arduino and thus, for example, prevent the window from closing
-            to carry out a break-in.
+            An attacker can provide or control state information.
 		\item \textbf{Threat 3:}
-            Someone could install a jammer and prevent the safety circuit from tripping. This means the system no longer works.            
+            An attacker can replay data without detection.            
 	\end{enumerate}
