@@ -5,69 +5,71 @@
 
 \subsubsection{Safety related modules}
 \begin{enumerate}
-    \item \textbf{CO2 Sensor Measurement and Validation Module (Arduino):} \\ 
-        \textbf{Description:} This module reads CO2 concentration levels using the MH-Z19 sensor and validates the readings to ensure they fall within a typical range. If a reading is outside the acceptable range, the value is marked as invalid and appropriate actions are taken. Valid CO2 values are sent to the Raspberry Pi for further processing. \\ 
-        \textbf{Functions:}
-        \begin{itemize}
-            \item Measure CO2 concentration as an analog value using the MH-Z19 sensor.
-            \item Validate the analog reading to ensure it falls within a typical range.
-            \item Mark and handle invalid values (e.g., send an error message or retry reading).
-            \item Send validated CO2 concentration values to the Raspberry Pi via serial communication.
-        \end{itemize}
-        \textbf{Data:} Raw sensor data, validated CO2 concentration values (ppm). \\ 
-        \textbf{Requirements:} \ref{req.2},  \ref{req.2.1}, \ref{req.2.2}\\
-
     \item \textbf{Window Control Module (Raspberry Pi):} \\ 
-        \textbf{Description:} This module receives validated CO2 values from the Arduino and controls the electric motor to open or close the window based on the CO2 levels. It ensures safe operation by detecting any obstacles during movement. \\ 
+        \textbf{Description:} This module receives status messages (e.g., OPEN, CLOSE, IDLE) from the Arduino and controls the electric motor to open or close the window based on the received status. It ensures safe operation by detecting any obstacles during movement. \\ 
         \textbf{Functions:}
         \begin{itemize}
-            \item Receive validated CO2 concentration values from the Arduino.
-            \item Open/close the window using the stepper motor if CO2 levels exceed or drop below predefined thresholds.
+            \item Receive status messages (e.g., OPEN, CLOSE, IDLE) from the Arduino.
+            \item Open/close the window using the stepper motor based on the status message.
             \item Monitor motor movement and detect deviations during window operation.
             \item Stop motor and trigger an error state if obstacles are detected.
             \item Report errors through email and LED indicators.
         \end{itemize}
-        \textbf{Data:} Stepper motor position, window state, validated CO2 data. \\ 
-        \textbf{Requirements:} \ref{req.3},  \ref{req.3.1}, \ref{req.3.2}, \ref{req.3.3} \\
-        \newpage
-    \item \textbf{Fan Control Module (Raspberry Pi):} \\ 
-        \textbf{Description:} This module controls the fan based on the CO2 levels received from the Arduino. It turns the fan on when CO2 levels are high and turns it off when levels normalize. \\ 
+        \textbf{Data:} Stepper motor position, window state, status messages. \\ 
+        \textbf{Requirements:} \ref{req.4} (Operating the window), \ref{req.1.5} (Connection retries and email alerts), \ref{req.3.1} (Acknowledgment of messages).
+        
+    \item \textbf{Value Validation Module (Arduino):} \\ 
+        \textbf{Description:} This module validates the CO2 sensor readings and determines whether the values are within a valid range. Only the status (OPEN, CLOSE, IDLE) is sent to the Raspberry Pi based on the results. \\ 
         \textbf{Functions:}
         \begin{itemize}
-            \item Turn on the fan when the CO2 level surpasses a certain threshold.
-            \item Turn off the fan when CO2 levels fall below the desired range.
+            \item Measure CO2 concentration using the MH-Z19 sensor.
+            \item Validate CO2 readings by checking for deviations from the average of previous readings.
+            \item Determine status (OPEN, CLOSE, IDLE) based on validated values.
+            \item Send status to the Raspberry Pi.
         \end{itemize}
-        \textbf{Data:} CO2 concentration values, fan state. \\ 
-        \textbf{Requirements:} Related to system operation based on CO2 levels.
-\end{enumerate}
+        \textbf{Data:} Raw sensor data, validated status (OPEN, CLOSE, IDLE). \\ 
+        \textbf{Requirements:} \ref{req.2} (Invalid Value Handling), \ref{qreq.7} (Status communication).
 
+\end{enumerate}
+\newpage
 \subsubsection{Security related modules}
 \begin{enumerate}
-    \item \textbf{Communication Encryption Module:} \\ 
-        \textbf{Description:} This module ensures secure data transmission between the Raspberry Pi and Arduino to prevent unauthorized access and tampering. It requires both the Raspberry Pi and Arduino to handle encryption and decryption of messages. \\ 
+    \item \textbf{Communication Module (Raspberry Pi and Arduino):} \\ 
+        \textbf{Description:} This module handles the communication between the Raspberry Pi and the Arduino, ensuring secure and reliable message transmission, including handling connection retries and managing encryption keys. \\ 
         \textbf{Functions:}
         \begin{itemize}
-            \item On the Raspberry Pi, encrypt data using the `cryptography` library before sending it to the Arduino.
-            \item On the Arduino, use an AES-compatible library (e.g., Arduino Cryptography Library) to decrypt the received data.
-            \item Ensure both devices securely share the encryption key for symmetric encryption.
+            \item Establish Bluetooth communication between Raspberry Pi and Arduino.
+            \item Implement acknowledgment of messages between devices.
+            \item Handle connection retries and trigger alerts after failed retries.
+            \item Implement Diffie-Hellman key exchange for secure communication setup.
+            \item Perform encryption and decryption of messages using AES-CBC-128.
         \end{itemize}
-        \textbf{Data:} Encrypted communication data. \\ 
-        \textbf{Requirements:} \ref{sreq.1} \\
+        \textbf{Data:} Encrypted communication data, status messages, acknowledgment messages. \\ 
+        \textbf{Requirements:} \ref{req.3} (Communication between devices), \ref{sreq.1} (Spoofing and key exchange), \ref{sreq.4} (Information Disclosure), \ref{req.1.5} (Email alerts on failed retries).
 
     \item \textbf{System Hardening Module (Raspberry Pi):} \\ 
-        \textbf{Description:} This module focuses on securing the Raspberry Pi against cyber threats. It ensures that the Raspberry Pi is protected from unauthorized access. \\ 
+        \textbf{Description:} This module focuses on securing the Raspberry Pi against cyber threats by implementing firewall rules and monitoring suspicious activity. \\ 
         \textbf{Functions:}
         \begin{itemize}
             \item Manage user authentication and access control.
-            \item Implement firewall rules to restrict network access.
             \item Monitor and log suspicious activity.
         \end{itemize}
         \textbf{Data:} Security logs, access control records. \\ 
-        \textbf{Requirements:} \ref{sreq.2} \\
+        \textbf{Requirements:} \ref{sreq.2} (Tampering protection), \ref{sreq.3}.3 (Repudiation logging).
 \end{enumerate}
 
 \subsubsection{Modules with no influence on Safety and Security}
 \begin{enumerate}
+    \item \textbf{Fan Control Module (Raspberry Pi):} \\ 
+        \textbf{Description:} This module controls the fan based on the status messages received from the Arduino. It turns the fan on when instructed to open the window and turns it off when instructed to close the window. \\ 
+        \textbf{Functions:}
+        \begin{itemize}
+            \item Turn on the fan when receiving an OPEN status.
+            \item Turn off the fan when receiving a CLOSE status.
+        \end{itemize}
+        \textbf{Data:} Status messages, fan state. \\ 
+        \textbf{Requirements:} \ref{qreq.8} (Fan activation on OPEN status), \ref{qreq.9} (Fan deactivation on CLOSE status).
+
     \item \textbf{System Monitoring Module (Raspberry Pi):} \\ 
         \textbf{Description:} This module handles general system diagnostics like checking CPU temperature and memory usage. It ensures that non-critical parameters are monitored for optimal system performance. \\ 
         \textbf{Functions:}
@@ -77,36 +79,31 @@
             \item Log non-critical warnings for maintenance purposes.
         \end{itemize}
         \textbf{Data:} System diagnostics logs, performance metrics. \\ 
-        \textbf{Requirements:} \ref{qreq.1}.
+        \textbf{Requirements:} \ref{qreq.1} (The system should be installed in an inaccessible location to ensure reliability).
 \end{enumerate}
 
 \subsection{Libraries}
 The following libraries are used to interface with hardware components and to implement the functionality described above:
 \begin{itemize}
-    \item \textbf{MH-Z19 Library:} 
+    \item \textbf{MH-Z19 Library (Arduino):} `MHZ19uart` or `SoftwareSerial` - to read CO2 data via UART from the MH-Z19 sensor and convert it into ppm values.
+    \item \textbf{Stepper Motor Control Library (Raspberry Pi):} `wiringPi` or equivalent C libraries for controlling the stepper motor for window movement.
+    \item \textbf{Communication Libraries:}
         \begin{itemize}
-            \item **Arduino**: `MHZ19uart` or `SoftwareSerial` - to read CO2 data via UART from the MH-Z19 sensor and convert it into ppm values.
-            \item **Raspberry Pi**: `pyserial` - for reading sensor data sent by the Arduino.
+            \item **Raspberry Pi**: `bluez` (C library) - for managing Bluetooth communication.
+            \item **Arduino**: `Arduino BluetoothSerial` - for establishing and maintaining Bluetooth connections.
         \end{itemize}
-    \item \textbf{Stepper Motor Control Library:} 
-        \begin{itemize}
-            \item **Raspberry Pi**: `RPi.GPIO` or `gpiozero` - to control the stepper motor for window movement.
-        \end{itemize}
-    \item \textbf{Email Notification Library:} `smtplib` (Python) - for sending email alerts directly from the Raspberry Pi when error states are detected.
     \item \textbf{Encryption Libraries:}
         \begin{itemize}
-            \item **Raspberry Pi**: `cryptography` (Python) - for encrypting communication before sending it to the Arduino.
-            \item **Arduino**: `Arduino Cryptography Library` - for decrypting the received encrypted messages.
+            \item **Raspberry Pi** and **Arduino**: AES libraries in C for encrypting and decrypting communication data.
         \end{itemize}
-    \item \textbf{Firewall Configuration Tools:} `ufw` (Linux tool) - for setting up and managing firewall rules on the Raspberry Pi.
 \end{itemize}
 
 \subsection{Interrupts}
 \textbf{Definition of priorities:}
 \begin{itemize}
-    \item \textbf{Priority 1:} Communication failure detection interrupt between the Raspberry Pi and Arduino. This ensures immediate action if data transfer fails.
+    \item \textbf{Priority 1:} Communication failure detection interrupt between the Raspberry Pi and Arduino to ensure immediate action if data transfer fails.
     \item \textbf{Priority 2:} Window control interrupts for obstacle detection during motor operation to prevent damage.
-    \item \textbf{Priority 3:} CO2 sensor data validation on the Arduino to ensure accurate measurement.
+    \item \textbf{Priority 3:} Status validation on the Arduino to ensure accurate CO2 evaluation.
 \end{itemize}
 
 \subsection{Pinout}
