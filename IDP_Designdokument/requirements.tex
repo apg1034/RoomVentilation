@@ -32,7 +32,7 @@
    		\item \label{req.2.3}  Requirement:  \\
 			If the sensor value is marked as invalid, the value must be dropped.\\
 	  \end{enumerate}
-		\item \label{req.3}  Requirement:    Communication between devices  \\
+		\item \label{req.3}  Requirement:   Communication between devices  \\
   	\begin{enumerate}[label*=\arabic*.]
 			\item \label{req.3.1}  Requirement:  \\
 			  For every message sent between the Raspberry Pi and the Arduino, the receiving device must send an acknowledgement-message to the original sender.\\
@@ -64,24 +64,60 @@
 \subsection{Security related requirements}
     \begin{enumerate}[label*=\arabic*.]
         \item \label{sreq.1} Spoofing Requirement:  \\
-        Both devices (Arduino and Raspberry Pi) must share a pre-shared key (PSK), which is used for authentication and integrity verification. For each communication, the sender computes an HMAC using the message and the secret key. The receiver uses the same key to validate the HMAC. \\ 
-        To exchange the key, both devices must use the Diffie-Hellman key exchange.\\
-        Both devices must have a unique device ID that is checked to ensure that only authenticated devices are allowed to communicate.\\
+        \begin{enumerate}[label*=\arabic*.]
+			\item \label{req.6.1.1}  Requirement:  \\
+             Both devices (Arduino and Raspberry Pi) must share a pre-shared key (PSK), which is used for authentication and integrity verification.\\  
+			\item \label{req.6.1.2}  Requirement:  \\
+            For each communication, the sender must compute an HMAC using the message and the secret key, which is validated by the receiver using the same key. \\
+			\item \label{req.6.1.3}  Requirement:  \\
+			To exchange the key, both devices must use the Diffie-Hellman key exchange.\\ 
+			\item \label{req.6.1.4}  Requirement:  \\
+		    Both devices must have a unique device ID that is checked to ensure that only authenticated devices are allowed to communicate.\\  
+	  \end{enumerate}
+        
         \item \label{sreq.2} Tampering Requirement:  \\
-        Each message between the Arduino and Raspberry Pi must be accompanied by an HMAC to verify whether the message has been altered during transmission. \\ 
-        Unauthorized physical access of the Raspberry Pi or Arduino should be prevented.\\
+        \begin{enumerate}[label*=\arabic*.]
+			\item \label{req.6.2.1}  Requirement:  \\
+            Each message between the Arduino and Raspberry Pi must be accompanied by an HMAC to verify whether the message has been altered during transmission. \\
+			\item \label{req.6.2.2}  Requirement:  \\
+            Unauthorized physical access of the Raspberry Pi or Arduino should be prevented.\\
+	  \end{enumerate}
+        
         \item \label{sreq.3} Repudiation Requirement:  \\
-        Each sent and received packet must be logged with timestamps on the Arduino and the Raspberry Pi. \\ 
-        Critical actions, such as opening and closing the windows, must also be logged.\\
+        \begin{enumerate}[label*=\arabic*.]
+			\item \label{req.6.3.1}  Requirement:  \\
+            Each sent and received packet must be logged with timestamps on the Arduino and the Raspberry Pi. \\ 
+			\item \label{req.6.3.2}  Requirement:  \\
+            Critical actions, such as opening and closing the windows, must also be logged.\\
+	  \end{enumerate}
+
         \item \label{sreq.4} Information Disclosure Requirement:  \\
-        The communication over the Bluetooth connection between the Raspberry Pi and the arduino must be encrypted via AES-CBC-128. \\
-        The successful encryption must be verified. This could be done by sending an encrypted default string with the data for the devices to verify the encryption.\\
+        \begin{enumerate}[label*=\arabic*.]
+			\item \label{req.6.4.1}  Requirement:  \\
+            The communication over the Bluetooth connection between the Raspberry Pi and the arduino must be encrypted via AES-CBC-128. \\ 
+			\item \label{req.6.4.2}  Requirement:  \\
+            The successful encryption must be verified, by sending an encrypted default string with the data for the devices to verify the encryption.\\
+	  \end{enumerate}
+
+        
         \item \label{sreq.5} Denial of Service Requirement:  \\
-        The Raspberry Pi must accept no more than 1 message every 9 seconds from the Arduino to prevent flooding attacks. \\
-        The Arduino must only wait for 1 acknowledgement message after sending a data message to the Raspberry Pi.\\
-        The Arduino must ignore all other received acknowledgement messages.\\
+        \begin{enumerate}[label*=\arabic*.]
+			\item \label{req.6.5.1}  Requirement:  \\
+            The Raspberry Pi must accept no more than 1 message every 9 seconds from the Arduino to prevent flooding attacks. \\
+			\item \label{req.6.5.2}  Requirement:  \\
+            The Arduino must only wait for 1 acknowledgement message after sending a data message to the Raspberry Pi.\\
+            \item \label{req.6.5.3}  Requirement:  \\
+            The Arduino must ignore all other received acknowledgement messages.\\
+	  \end{enumerate}
+
+           
         \item \label{sreq.2} Elevation of Privilege Requirement:  \\
-        There is a minimum length for the password of 12 characters. This guarantees a strong password which will make it hard for attackers to take over control of the administrators account.\\ 
+        \begin{enumerate}[label*=\arabic*.]
+			\item \label{req.6.6.1}  Requirement:  \\
+            There is a minimum length of 12 characters for all used passwords.\\
+	  \end{enumerate}
+   
+        
     \end{enumerate}         
 
 
@@ -106,6 +142,8 @@
         When instructed by the Arduino via receiving an OPEN-Status, the Raspberry Pi must open the window, start the fan and enter the Alarm state. This is triggered after measuring 10 values that are 5 ppm higher than the average.\\ 
         \item \label{qreq.9}  Requirement:  \\
         When instructed by the Arduino via receiving a CLOSE-Status, the Raspberry Pi must close the window, stop the fan and revert back to the Idle state. This happens when 10 values are measured that are within 2 ppm of the average. \\ 
+        \item \label{qreq.10}  Requirement:  \\
+        The project does not need to support any features not mentioned. \\
         
     \end{enumerate} 
     

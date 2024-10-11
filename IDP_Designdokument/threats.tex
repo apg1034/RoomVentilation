@@ -9,19 +9,20 @@
              \textbf{Mitigation:}
             There must be logs with timestamps.
 		\item \textbf{Threat 2}:
-            An attacker can alter the data that is sent back and forth.\\ \\
+            An attacker can alter and manipulate the data that is sent back and forth. (Mitm-attack)\\ \\
             \textbf{Mitigation:}
             Each message between the Arduino and Raspberry Pi must be accompanied by an HMAC.
 		\item \textbf{Threat 3}:
             An Attacker carry out a DoS attack on the Raspberry Pi.\\ \\
             \textbf{Mitigation:}
-            The Raspberry Pi must accept no more than 1 message every 9 seconds from the Arduino to prevent flooding attacks.	\end{enumerate}
+            The Raspberry Pi must accept no more than 1 message every 9 seconds from the Arduino to prevent flooding attacks.
+            \end{enumerate}
 	
 \subsection{Identified threats without countermeasures}
 
 	\begin{enumerate}
 		\item \textbf{Threat 1:} 
-            An attacker can force data through different validation paths which give different results. 
+            An attacker can carry out a DoS-attack on the LAN connection of the raspberry pi in order to prevent it from sending an email.
 		\item \textbf{Threat 2:}
             An attacker can provide or control state information.
 		\item \textbf{Threat 3:}

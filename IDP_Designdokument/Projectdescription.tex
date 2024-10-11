@@ -3,7 +3,7 @@
 
 \subsection{Problem description}
 
-Basically, the idea of our project is to build an automatic room ventilation. This could be used in a classroom or an office, for example. When the CO2 level in a room reaches a certain level, a window should automatically open and a fresh air fan should be switch on. After a certain lower CO2 level is reached and a certain run-on time has elapsed, the window should be closed and the fan switched off again.\\
+The idea of our project is to build an automatic room ventilation. This could be used in a classroom or an office, for example. When the CO2 level in a room reaches a certain level, a window should automatically open and a fresh air fan should be switch on. After a certain lower CO2 level is reached and a certain run-on time has elapsed, the window should be closed and the fan switched off again.\\
 
 The system is divided into 2 larger areas, one of which is a Raspberry Pi and the other is an Arduino. These two components are supposed to communicate with each other and exchange data via a secure Bluetooth connection. 
 
@@ -25,11 +25,12 @@ The project part of the Raspberry Pi consists of the following hardware:
 
 \begin{enumerate}[label*=\arabic*.]
     \item \label{io.1} Raspberry Pi 4 Model B 8GB
-    \item \label{io.2} 2x Mini Stepper Motor Kit ULN2003A with 28BYJ-48 
-    \item \label{io.3} cabling
+    \item \label{io.2} 2x Mini Stepper Motor Kit ULN2003A with 28BYJ-48
+    \item \label{io.3} potentiometer
+    \item \label{io.4} cabling
 \end{enumerate}
 
-On the other hand, the Raspberry Pi is mainly responsible for device control. It receives the status of the Arduino every 10 seconds and works based on it. When the status is OPEN or CLOSE, it controls the motor for the window and the fan and turns them on/off.
+On the other hand, the Raspberry Pi is mainly responsible for device control. It receives the status of the Arduino every 10 seconds and works based on it. When the status is OPEN or CLOSE, it controls the motor for the window and the motor for the fan and turns them on/off. The potentiometer is measuring the current position of the window in order for the Raspberry Pi to decide weather the window was opened/closed successfully.
 
 \newpage
 
