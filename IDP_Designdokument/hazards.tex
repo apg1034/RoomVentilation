@@ -4,22 +4,28 @@
 \subsection{Identified hazards and countermeasures}
 
 
-	\begin{enumerate}
-		\item \label{hazc.1} Hazard 1: \\
-            \\	Co2 sensor delivers incorrect values \ref{req.2} \\
-		\item \label{hazc.2} Hazard 2: \\
-            \\	The window is stuck and does not open or close \ref{req.3} \\
-		\item \label{hazc.3} Hazard 3: \\
-            \\	Arduino fails \ref{req.4} \\
-	\end{enumerate}
+	\begin{itemize}
+		\item \label{hazc.1} \textbf{Hazard 1:}
+            \\	Co2 sensor delivers incorrect values \ref{req.2} \\\\
+            \textbf{Countermeasures 1:}\\
+            All measured values are compared with the average of the previously measured values. If a certain threshold for this difference is exceeded, the value is declared invalid.
+		\item \label{hazc.2} \textbf{Hazard 2:}
+            \\	The window is stuck and does not open or close \ref{req.4} \\\\
+            \textbf{Countermeasures 2:}\\
+            The position of the stepper motor is measured after the opening or closing process has been completed and compared with the default value of a closed or opened window
+		\item \label{hazc.3} \textbf{Hazard 3:}
+            \\	Arduino fails \ref{req.1} \\\\
+            \textbf{Countermeasures 3:}\\
+            The Raspberry Pi is sending an email to the system administrator after connection-retries with the Arduino are unsuccessful for 30 seconds.
+	\end{itemize}
 	
 \subsection{Identified hazards without countermeasures }
 
-	\begin{enumerate}
+	\begin{itemize}
 		\item \label{haz.1} Hazard 1: \\
-            \\	The Co2 sensor fails and does not provide data \\
+            \\	The Co2 sensor fails and does not provide data anymore.
 		\item \label{haz.2} Hazard 2: \\
-            \\	The power supply fails \\
+            \\	The power supply fails on the Arduino or the Raspberry Pi.
 		\item \label{haz.3} Hazard 3: \\
-            \\	The engine fails \\
-	\end{enumerate}
+            \\	The engine for the window fails. \\
+	\end{itemize}
