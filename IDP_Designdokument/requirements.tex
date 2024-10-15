@@ -17,7 +17,7 @@
 			\item \label{req.1.4} Requirement:   \\
 			If an error occurs during program start at the Raspberry Pi, this must be indicated by an LED (LED OFF)\\    
 			\item \label{req.1.5} Requirement:   \\
-			If the Arduino stops communicating with Raspberry Pi, the Raspberry Pi must send an email to the system administrator after connection-retries are unsuccessful for 30 seconds.\\    
+			If the Arduino stops communicating with Raspberry Pi, the Raspberry Pi must send an email to the system administrator after connection-retries are unsuccessful 3 times (3 x 10 seconds = 30 seconds).\\    
    			\item \label{req.1.6} Requirement:   \\
             Connection-retries must be sent every 10 seconds.\\
 			\item \label{req.1.7} Requirement:   \\
@@ -127,7 +127,7 @@
         \item \label{qreq.1}  Requirement:  \\
         The Raspberry Pi must be waiting for the Arduino to establish a Bluetooth Connection. \\ 
         \item \label{qreq.2}  Requirement:  \\
-        The Adruino must initiate a Bluetooth Connection to the corresponding Raspberry Pi. \\ 
+        The Adruino must try to initiate a Bluetooth Connection to the corresponding Raspberry Pi. \\ 
         \item \label{qreq.3}  Requirement:  \\
         If Bluetooth communication fails (no acknowledgment received), the Raspberry Pi must attempt to reconnect up to 3 times. \\ 
         \item \label{qreq.4}  Requirement:  \\
@@ -139,9 +139,9 @@
         \item \label{qreq.7}  Requirement:  \\
         The Arduino must communicate the current status to the Raspberry Pi (OPEN, CLOSE, IDLE).\\ 
         \item \label{qreq.8}  Requirement:  \\
-        When instructed by the Arduino via receiving an OPEN-Status, the Raspberry Pi must open the window, start the fan and enter the Alarm state. This is triggered after measuring 10 values that are 5 ppm higher than the average.\\ 
+        When instructed by the Arduino via receiving an OPEN-Status, the Raspberry Pi must control the motor to open the window, start the fan and enter the Alarm state. This is triggered after measuring 10 values that are 5 ppm higher than the average.\\ 
         \item \label{qreq.9}  Requirement:  \\
-        When instructed by the Arduino via receiving a CLOSE-Status, the Raspberry Pi must close the window, stop the fan and revert back to the Idle state. This happens when 10 values are measured that are within 2 ppm of the average. \\ 
+        When instructed by the Arduino via receiving a CLOSE-Status, the Raspberry Pi must must control the motor to close the window, stop the fan and revert back to the Idle state. This happens when 10 values are measured that are within 2 ppm of the average. \\ 
         \item \label{qreq.10}  Requirement:  \\
         The project does not need to support any features not mentioned. \\
         
