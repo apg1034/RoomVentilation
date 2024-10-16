@@ -8,25 +8,23 @@
 	\begin{enumerate}[label*=\arabic*.]
 		\item \label{req.1}  Requirement: Connection Handling \\
 		\begin{enumerate}[label*=\arabic*.]
-			\item \label{req.1.1}  Requirement:  \\
-			If an error occurs during program start at the Arduino, this must be indicated by an LED (LED OFF)\\ 
+            \label{req.1.1}  Requirement:  \\
+			If any error occurs during program start at the Arduino, this must be indicated by the Error-LED (LED OFF)\\ 
 			\item \label{req.1.2} Requirement:   \\
-			If no error occurs during program start at the Arduino, this must be indicated by an LED (LED ON)\\ 
+			If no error occurs during program start at the Arduino, this must be indicated by the Error-LED (LED ON)\\ 
 			\item \label{req.1.3} Requirement:   \\
-			If no error occurs during program start at the Raspberry Pi, this must be indicated by an LED (LED ON)\\    
+			If no error occurs during program start at the Raspberry Pi, this must be indicated by the Error-LED (LED ON)\\    
 			\item \label{req.1.4} Requirement:   \\
-			If an error occurs during program start at the Raspberry Pi, this must be indicated by an LED (LED OFF)\\    
+			If any error occurs during program start at the Raspberry Pi, this must be indicated by the Error-LED (LED OFF)\\     
 			\item \label{req.1.5} Requirement:   \\
 			If the Arduino stops communicating with Raspberry Pi, the Raspberry Pi must send an email to the system administrator after connection-retries are unsuccessful 3 times (3 x 10 seconds = 30 seconds).\\    
-   			\item \label{req.1.6} Requirement:   \\
+   		\item \label{req.1.6} Requirement:   \\
             Connection-retries must be sent every 10 seconds.\\
 			\item \label{req.1.7} Requirement:   \\
             When the connection is established initially and the devices are communicating, the window must be successfully opened and closed once as a mechanical functionality test.\\
 		\end{enumerate}
 		\item \label{req.2}  Requirement:  Invalid Value Handling\\
   	\begin{enumerate}[label*=\arabic*.]
-			\item \label{req.2.1}  Requirement:  \\
-			Every measured value of the CO2 sensor must be checked for their validity by the Arduino.\\ 
    		\item \label{req.2.2}  Requirement:  \\
 			If the measured value differentiates more than 50 ppm from the average of the 5 previous values, the value is marked as invalid.\\
    		\item \label{req.2.3}  Requirement:  \\
@@ -131,7 +129,7 @@
         \item \label{qreq.3}  Requirement:  \\
         If Bluetooth communication fails (no acknowledgment received), the Raspberry Pi must attempt to reconnect up to 3 times. \\ 
         \item \label{qreq.4}  Requirement:  \\
-        If the reconnection fails, a visual signal (blinking LED) will be triggered, and the system will wait 10 seconds before retrying. \\ 
+        If the reconnection fails, a visual signal (the Error-LED starts blinking) will be triggered, and the system will wait 10 seconds before retrying. \\
         \item \label{qreq.5}  Requirement:  \\
         The Arduino with the CO2 sensor must measure the current CO2 levels every 10 seconds and evaluate the value. \\ 
         \item \label{qreq.6}  Requirement:  \\
