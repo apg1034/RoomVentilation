@@ -108,11 +108,66 @@ The following libraries are used to interface with hardware components and to im
 
 \subsection{Pinout}
 \begin{itemize}
-    \item \textbf{CO2 Sensor (MiCS-VZ-89TE - Arduino):} Connected via UART for analog data reading.
-    \item \textbf{Window Motor Control (Raspberry Pi):} Connected to GPIO pins for controlling the motor.
-    \item \textbf{Fan Control (Raspberry Pi):} Connected to GPIO pins for fan activation.
-    \item \textbf{Error Indicators (Raspberry Pi \& Arduino):} LEDs connected to GPIO pins for status indication.
+    \item \textbf{CO2 Sensor (MiCS-VZ-89TE - Arduino Nano 33 IoT):}
+    \begin{itemize}
+        \item CO2 Sensor VCC to 3.3V on Arduino
+        \item CO2 Sensor GND to GND on Arduino
+        \item CO2 Sensor SCL to Pin A5 on Arduino
+        \item CO2 Sensor SDA to Pin A4 on Arduino
+    \end{itemize}
+    
+    \item \textbf{Status LED (Arduino Nano 33 IoT):}
+    \begin{itemize}
+        \item Status LED Positive (Anode) to D3 on Arduino
+        \item Status LED Negative (Cathode) to GND on Arduino (through a 220 \ohm{} resistor)
+    \end{itemize}
+    
+    \item \textbf{Power Supply (Arduino Nano 33 IoT):}
+    \begin{itemize}
+        \item Vin connected to a 5V power source (via Micro-USB)
+    \end{itemize}
+
+    \item \textbf{Window Motor Control (Raspberry Pi 4 Model B - ULN2003A Driver):}
+    \begin{itemize}
+        \item Window Motor Control Pin IN1 to GPIO17 (Pin 11) on Raspberry Pi
+        \item Window Motor Control Pin IN2 to GPIO27 (Pin 13) on Raspberry Pi
+        \item Window Motor Control Pin IN3 to GPIO22 (Pin 15) on Raspberry Pi
+        \item Window Motor Control Pin IN4 to GPIO5 (Pin 29) on Raspberry Pi
+        \item Motor Driver VCC to 5V (Pin 2) on Raspberry Pi
+        \item Motor Driver GND to GND (Pin 6) on Raspberry Pi
+    \end{itemize}
+
+    \item \textbf{Fan Motor Control (Raspberry Pi 4 Model B - ULN2003A Driver):}
+    \begin{itemize}
+        \item Fan Motor Control Pin IN1 to GPIO23 (Pin 16) on Raspberry Pi
+        \item Fan Motor Control Pin IN2 to GPIO24 (Pin 18) on Raspberry Pi
+        \item Fan Motor Control Pin IN3 to GPIO25 (Pin 22) on Raspberry Pi
+        \item Fan Motor Control Pin IN4 to GPIO16 (Pin 36) on Raspberry Pi
+        \item Motor Driver VCC to 5V (Pin 4) on Raspberry Pi
+        \item Motor Driver GND to GND (Pin 9) on Raspberry Pi
+    \end{itemize}
+
+    \item \textbf{Potentiometer (Raspberry Pi 4 Model B):}
+    \begin{itemize}
+        \item Potentiometer VCC to 3.3V (Pin 1) on Raspberry Pi
+        \item Potentiometer GND to GND (Pin 6 or Pin 9) on Raspberry Pi
+        \item Potentiometer SW to GPIO21 (Pin 40) on Raspberry Pi
+        \item Potentiometer DT to GPIO20 (Pin 38) on Raspberry Pi
+        \item Potentiometer CLK to GPIO6 (Pin 31) on Raspberry Pi
+    \end{itemize}
+
+    \item \textbf{Status LED (Raspberry Pi 4 Model B):}
+    \begin{itemize}
+        \item Status LED Positive (Anode) to GPIO26 (Pin 37) on Raspberry Pi
+        \item Status LED Negative (Cathode) to GND on Raspberry Pi (through a 220 \ohm{} resistor, Pin 9)
+    \end{itemize}
+
+    \item \textbf{Power Supply (Raspberry Pi 4 Model B):}
+    \begin{itemize}
+        \item 5V Power Supply to Raspberry Pi power input (via USB-C)
+    \end{itemize}
 \end{itemize}
+
 
 \begin{figure}[h]
 	\includegraphics[height=200mm,left]{images/RoomVentilation_Cabling.jpg}
