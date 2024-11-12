@@ -21,8 +21,9 @@ BLEIntCharacteristic vocCharacteristic("abcdef01-2345-6789-0123-456789abcdef", B
 
 
 // Timing
-unsigned long previousMillis = 0;
 const long interval = 10000; // 10 seconds
+long timestamp = 0;
+
 unsigned long noCentralPreviousMillis = 0;
 const long noCentralInterval = 1000; // 1 second for BLE advertising
 
@@ -55,17 +56,13 @@ void setup() {
 
 void loop() {
     BLEDevice central = BLE.central();
-    delay(5000);
 
     if (central) {
-        Serial.print("Connected to central: ");
-        Serial.println(central.address());
-
-        unsigned long currentMillis = millis();
-
         // Read and send data every interval
-        if (currentMillis - previousMillis >= interval) {
-            previousMillis = currentMillis;
+        if (millis() - timestamp > interval) {
+
+            Serial.print("Connected to central: ");
+            Serial.println(central.address());
 
             // Read sensor values
             CO2SENSOR.readSensor();
@@ -104,6 +101,8 @@ void loop() {
             Serial.println(co2);
             Serial.print("Sent VOC: ");
             Serial.println(voc);
+
+            timestamp = millis();
         }
     } else {
         // Restart advertising if no central is connected
