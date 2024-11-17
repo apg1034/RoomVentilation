@@ -66,8 +66,8 @@ void loop() {
 
             // Read sensor values
             CO2SENSOR.readSensor();
-            int co2 = 400;//CO2SENSOR.getCO2();
-            int voc = 50;//CO2SENSOR.getVOC();
+            int co2 = CO2SENSOR.getCO2();
+            int voc = CO2SENSOR.getVOC();
 
             // Store readings for averaging
             previousReadings[readingIndex] = co2;
