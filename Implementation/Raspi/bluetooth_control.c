@@ -7,6 +7,7 @@
 #include <termio.h>
 
 #include "gattlib.h"
+#include "common.h"
 
 #define SENSOR_ID "87654321-4321-6789-4321-fedcba987654"
 #define MAC_ADDR "4C:11:AE:C9:80:12"
@@ -76,15 +77,15 @@ static void on_device_connect(gattlib_adapter_t* adapter, const char *dst, gattl
 			gattlib_uuid_to_string(&m_argument.uuid, uuid_str, sizeof(uuid_str));
 
 			if (ret == GATTLIB_NOT_FOUND) {
-				printf("Could not find GATT Characteristic with UUID %s. "
+				print_with_timestamp("Could not find GATT Characteristic with UUID %s. "
 					"You might call the program with '--gatt-discovery'.", uuid_str);
 			} else {
-				printf("Error while reading GATT Characteristic with UUID %s (ret:%d)", uuid_str, ret);
+				print_with_timestamp("Error while reading GATT Characteristic with UUID %s (ret:%d)", uuid_str, ret);
 			}
 			break;			
 		}
 
-		printf("Read UUID completed: ");
+		print_with_timestamp("Read UUID completed: ");
 		
 		for (uintptr_t i = 0; i < len; i++) {
 			printf("%02x ", buffer[i]);
@@ -98,7 +99,7 @@ static void on_device_connect(gattlib_adapter_t* adapter, const char *dst, gattl
 		
 		if (kbhit())
 		{
-			printf("Exit\n");
+			print_with_timestamp("Exit\n");
 			break;
 		}
 		
@@ -111,7 +112,7 @@ static void on_device_connect(gattlib_adapter_t* adapter, const char *dst, gattl
 	
 	gattlib_characteristic_free_value(buffer);
 
-	printf("Wait for disconnect.\n");
+	print_with_timestamp("Wait for disconnect.\n");
 
 	gattlib_disconnect(connection, false /* wait_disconnection */);
 
@@ -135,11 +136,11 @@ static void ble_discovered_device(gattlib_adapter_t* adapter, const char* addr, 
 		return;
 	}
 
-	printf("Found bluetooth device '%s'\n", m_argument.mac_address);
+	print_with_timestamp("Found bluetooth device '%s'\n", m_argument.mac_address);
 
 	ret = gattlib_connect(adapter, addr, GATTLIB_CONNECTION_OPTIONS_NONE, on_device_connect, NULL);
 	if (ret != GATTLIB_SUCCESS) {
-		printf("Failed to connect to the bluetooth device '%s'\n", addr);
+		print_with_timestamp("Failed to connect to the bluetooth device '%s'\n", addr);
 	}
 }
 
@@ -148,31 +149,31 @@ static void* ble_task(void* arg) {
 	gattlib_adapter_t* adapter;
 	int ret;
 
-    printf("Open BLE Adapter.\n");
+    print_with_timestamp("Open BLE Adapter.\n");
 	
 	ret = gattlib_adapter_open(m_argument.adapter_name, &adapter);
 	
 	if (ret) {
-		printf("Failed to open adapter.\n");
+		print_with_timestamp("Failed to open adapter.\n");
 		return NULL;
 	}
 
-    printf("Scanning devices.\n");
+    print_with_timestamp("Scanning devices.\n");
 	
 	ret = gattlib_adapter_scan_enable(adapter, ble_discovered_device, BLE_SCAN_TIMEOUT, addr);
 	if (ret) {
-		printf("Failed to scan.\n");
+		print_with_timestamp("Failed to scan.\n");
 		return NULL;
 	}
 
-	printf("Wait for connection.\n");
+	print_with_timestamp("Wait for connection.\n");
 
 	// Wait for the device to be connected
 	pthread_mutex_lock(&m_connection_terminated_lock);
 	pthread_cond_wait(&m_connection_terminated, &m_connection_terminated_lock);
 	pthread_mutex_unlock(&m_connection_terminated_lock);
 
-	printf("Connection terminated.\n");
+	print_with_timestamp("Connection terminated.\n");
 
 	return NULL;
 }
@@ -187,7 +188,7 @@ bool initializeBluetooth()
 	// Create uuid 
 	
 	if (gattlib_string_to_uuid(SENSOR_ID, strlen(SENSOR_ID) + 1, &m_argument.uuid) < 0) {
-		printf ("Invalid uuid\n");
+		print_with_timestamp ("Invalid uuid\n");
 		return false;
 	}
 	
@@ -197,13 +198,20 @@ bool initializeBluetooth()
 bool runBluetooth()
 {
 	int ret;
-	
-	ret = gattlib_mainloop(ble_task, NULL);
-	
-	if (ret != GATTLIB_SUCCESS) {
-		printf("Failed to create gattlib mainloop");
-		return false;
+	int retryCount = 0;
+		
+	while(1)
+	{
+		retryCount++;
+		ret = gattlib_mainloop(ble_task, NULL);
+		
+		if (ret != GATTLIB_SUCCESS) {
+			print_with_timestamp ("Failed to create gattlib mainloop");
+			return true;
+		}
+		
+		break;
 	}
 				
-	return true;
+	return false;
 }
