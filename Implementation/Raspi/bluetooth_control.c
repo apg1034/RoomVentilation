@@ -8,10 +8,15 @@
 
 #include "gattlib.h"
 #include "common.h"
+#include "led_control.h"
+#include "action_control.h"
+#include "mail_control.h"
 
 #define SENSOR_ID "87654321-4321-6789-4321-fedcba987654"
 #define MAC_ADDR "4C:11:AE:C9:80:12"
 #define BLE_SCAN_TIMEOUT   10
+#define ERROR_WAIT_TIME 10
+#define READ_WAIT_TIME 1
 
 static struct {
 	char *adapter_name;
@@ -27,7 +32,12 @@ static pthread_cond_t m_connection_terminated = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t m_connection_terminated_lock = PTHREAD_MUTEX_INITIALIZER;
 
 // state of program
-// enum { UNINITIALIZED, INIT, CONNECTED, DISCONNECT} state = UNINITIALIZED;
+
+enum { UNINITIALIZED, FOUND, CONNECTED, READERROR, DISCONNECT} state = UNINITIALIZED;
+
+// Global Retry Count
+
+int retryCount = 0;
 
 bool kbhit(void)
 {
@@ -78,13 +88,18 @@ static void on_device_connect(gattlib_adapter_t* adapter, const char *dst, gattl
 
 			if (ret == GATTLIB_NOT_FOUND) {
 				print_with_timestamp("Could not find GATT Characteristic with UUID %s. "
-					"You might call the program with '--gatt-discovery'.", uuid_str);
+					"You might call the program with '--gatt-discovery'.\n", uuid_str);
 			} else {
-				print_with_timestamp("Error while reading GATT Characteristic with UUID %s (ret:%d)", uuid_str, ret);
+				print_with_timestamp("Error while reading GATT Characteristic with UUID %s (ret:%d)\n", uuid_str, ret);
 			}
+			
+			state = READERROR;
 			break;			
 		}
-
+		state = CONNECTED;
+		retryCount = 0;
+		turnOnLED();
+		
 		print_with_timestamp("Read UUID completed: ");
 		
 		for (uintptr_t i = 0; i < len; i++) {
@@ -94,6 +109,10 @@ static void on_device_connect(gattlib_adapter_t* adapter, const char *dst, gattl
 		value = bytes_to_int(buffer, 4);
 		
 		printf(" (%d)\n", value);
+
+		// Action for OPEN, CLOSE or IDLE
+		
+		setAction(value);
 
 		// Exit if any key is hit
 		
@@ -105,7 +124,7 @@ static void on_device_connect(gattlib_adapter_t* adapter, const char *dst, gattl
 		
 		// Wait
 		
-		sleep(1);
+		sleep(READ_WAIT_TIME);
 	}
 
 	// EXIT
@@ -136,8 +155,15 @@ static void ble_discovered_device(gattlib_adapter_t* adapter, const char* addr, 
 		return;
 	}
 
+	state = FOUND;
+
 	print_with_timestamp("Found bluetooth device '%s'\n", m_argument.mac_address);
 
+	ret = gattlib_adapter_scan_disable(adapter);
+	if (ret) {
+		print_with_timestamp("Scan disabled (Error: %x).\n",ret);
+	}
+	
 	ret = gattlib_connect(adapter, addr, GATTLIB_CONNECTION_OPTIONS_NONE, on_device_connect, NULL);
 	if (ret != GATTLIB_SUCCESS) {
 		print_with_timestamp("Failed to connect to the bluetooth device '%s'\n", addr);
@@ -148,6 +174,7 @@ static void* ble_task(void* arg) {
 	char* addr = arg;
 	gattlib_adapter_t* adapter;
 	int ret;
+	int closeRetry = 0;
 
     print_with_timestamp("Open BLE Adapter.\n");
 	
@@ -162,19 +189,51 @@ static void* ble_task(void* arg) {
 	
 	ret = gattlib_adapter_scan_enable(adapter, ble_discovered_device, BLE_SCAN_TIMEOUT, addr);
 	if (ret) {
-		print_with_timestamp("Failed to scan.\n");
+		print_with_timestamp("Failed to scan (Error: %x).\n",ret);
 		return NULL;
 	}
+	
+	if (FOUND == state)
+	{
+		print_with_timestamp("Wait for connection.\n");
 
-	print_with_timestamp("Wait for connection.\n");
+		// Wait for the device to be connected
+		pthread_mutex_lock(&m_connection_terminated_lock);
+		pthread_cond_wait(&m_connection_terminated, &m_connection_terminated_lock);
+		pthread_mutex_unlock(&m_connection_terminated_lock);
 
-	// Wait for the device to be connected
-	pthread_mutex_lock(&m_connection_terminated_lock);
-	pthread_cond_wait(&m_connection_terminated, &m_connection_terminated_lock);
-	pthread_mutex_unlock(&m_connection_terminated_lock);
+		print_with_timestamp("Connection terminated.\n");
 
-	print_with_timestamp("Connection terminated.\n");
-
+		int closeRetry = 0;
+	}
+	else
+	{
+		print_with_timestamp("No device found.\n");
+	
+		ret = gattlib_adapter_scan_disable(adapter);
+		if (ret) {
+			print_with_timestamp("Scan disabled (Error: %x).\n",ret);
+		}	
+	}
+		
+	while(1)
+	{
+		ret = gattlib_adapter_close(adapter);
+		
+		if(ret == GATTLIB_BUSY && closeRetry == 0)
+		{
+			print_with_timestamp("Gattlib busy, waiting 10 sek\n",ret);
+			sleep(10);
+			closeRetry++;
+		}
+		else
+		{
+			if (ret) {
+				print_with_timestamp("Adapter close (Error: %x).\n",ret);
+				return NULL;
+			}
+		}
+	}
 	return NULL;
 }
 
@@ -198,19 +257,47 @@ bool initializeBluetooth()
 bool runBluetooth()
 {
 	int ret;
-	int retryCount = 0;
 		
 	while(1)
-	{
-		retryCount++;
+	{		
 		ret = gattlib_mainloop(ble_task, NULL);
 		
 		if (ret != GATTLIB_SUCCESS) {
-			print_with_timestamp ("Failed to create gattlib mainloop");
+			print_with_timestamp ("Failed to create gattlib mainloop\n");
 			return true;
 		}
 		
-		break;
+		if(state == READERROR)
+		{
+			retryCount++;
+		
+			print_with_timestamp ("Reading failed: retryCount = %i\n", retryCount);
+		
+			if(retryCount > 1)
+			{
+				// LED blinken
+			
+				turnOffLED();
+				print_with_timestamp ("Signal LED\n");			
+				
+				if(retryCount > 2)
+				{
+					// Send mail and exit
+					print_with_timestamp ("Signal MAIL\n");
+					
+					// Please comment out if all tests are done
+					// sendMail();
+					
+					return true;
+				}
+			}
+		}
+		else
+		{
+			// Exit normal
+			break;
+		}
+		sleep(ERROR_WAIT_TIME);
 	}
 				
 	return false;

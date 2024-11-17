@@ -1,0 +1,2 @@
+
+int sendMail(void);
