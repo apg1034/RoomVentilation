@@ -11,6 +11,8 @@
 #include "led_control.h"
 #include "action_control.h"
 #include "mail_control.h"
+#include "crypto_control.h"
+
 
 #define SENSOR_ID "87654321-4321-6789-4321-fedcba987654"
 #define MAC_ADDR "4C:11:AE:C9:80:12"
