@@ -8,6 +8,7 @@
 #include "motor_control.h"
 #include "led_control.h"
 #include "bluetooth_control.h"
+#include "crypto_control.h"
 
 #define CO2_THRESHOLD 450
 
