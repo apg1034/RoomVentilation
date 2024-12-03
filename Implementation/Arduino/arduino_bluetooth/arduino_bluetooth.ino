@@ -19,8 +19,7 @@ bool initialized = false;
 
 // BLE characteristics
 BLEService sensorService("12345678-1234-5678-1234-56789abcdef0");
-BLEIntCharacteristic co2Characteristic("87654321-4321-6789-4321-fedcba987654", BLERead | BLENotify);
-BLEIntCharacteristic vocCharacteristic("abcdef01-2345-6789-0123-456789abcdef", BLERead | BLENotify);
+BLECharacteristic statusCharacteristic("87654321-4321-6789-4321-fedcba987654", BLERead | BLENotify,32);
 
 //AES Keys
 AESLib aes;
@@ -37,6 +36,8 @@ long timestamp = 0;
 
 unsigned long noCentralPreviousMillis = 0;
 const long noCentralInterval = 1000; // 1 second for BLE advertising
+
+char status[32] = {0};
 
 uint16_t encrypt_to_ciphertext(char * msg, byte iv[]) {
   int msgLen = strlen(msg);
@@ -76,14 +77,13 @@ void setup() {
     BLE.setLocalName("ArduinoNano33IoT");
     BLE.setAdvertisedService(sensorService);
     BLE.setAdvertisingInterval(50); // Set to 50 ms
-    sensorService.addCharacteristic(co2Characteristic);
-    sensorService.addCharacteristic(vocCharacteristic);
+    sensorService.addCharacteristic(statusCharacteristic);
     BLE.addService(sensorService);
 
     BLE.advertise();
     Serial.println("BLE advertising and sensor started...");
 
-
+    /*
     memcpy(enc_iv_to, aes_iv, sizeof(aes_iv));
     memcpy(enc_iv_from, aes_iv, sizeof(aes_iv));
     strncpy(cleartext, "Hallo, Welt!", sizeof(cleartext) - 1);
@@ -93,6 +93,7 @@ void setup() {
     Serial.println("Encrypted. Decrypting..."); Serial.flush();
     decrypt_to_cleartext(ciphertext, len, enc_iv_from);
     Serial.println(cleartext);
+    */
 
 }
 
@@ -135,14 +136,19 @@ void loop() {
                 digitalWrite(ERROR_LED_PIN, LOW);
             }
 
-            // Send valid data
-            co2Characteristic.writeValue(co2);
-            vocCharacteristic.writeValue(voc);
+            strncpy(status, "1", sizeof(status) - 1);
 
-            Serial.print("Sent CO2: ");
-            Serial.println(co2);
-            Serial.print("Sent VOC: ");
-            Serial.println(voc);
+            memcpy(enc_iv_to, aes_iv, sizeof(aes_iv));
+            uint16_t len = encrypt_to_ciphertext(status, enc_iv_to);
+
+            Serial.print("Sent Status: ");
+            Serial.println(ciphertext);
+
+            // Send valid data
+            statusCharacteristic.writeValue((byte*)ciphertext,strlen(ciphertext));
+
+            Serial.print("Sent Status: ");
+            Serial.println(ciphertext);
 
             timestamp = millis();
         }
