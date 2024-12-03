@@ -69,6 +69,33 @@ int bytes_to_int(unsigned char *bytes, size_t length) {
     return result;
 }
 
+void decrypt_ciphertext(unsigned char *encrypted_data, int data_length, unsigned char *decrypted_data) {
+    unsigned char key[16] = {
+        0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38,
+        0x39, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36
+    };
+
+    unsigned char iv[16] = {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+
+    memset(decrypted_data, 0, data_length);
+
+    aes_decrypt(encrypted_data, data_length, decrypted_data, key, iv);
+
+}
+
+
+void printUnsignedCharArray(const unsigned char* array, size_t length) {
+    for (size_t i = 0; i < length; ++i) {
+        printf("%c", array[i]);
+    }
+    printf("\n");
+}
+
+
+
 static void on_device_connect(gattlib_adapter_t* adapter, const char *dst, gattlib_connection_t* connection, int error, void* user_data) {
 	int ret;
 	size_t len;
@@ -104,13 +131,23 @@ static void on_device_connect(gattlib_adapter_t* adapter, const char *dst, gattl
 		
 		print_with_timestamp("Read UUID completed: ");
 		
-		for (uintptr_t i = 0; i < len; i++) {
-			printf("%02x ", buffer[i]);
-		}
+//		for (uintptr_t i = 0; i < len; i++) {
+//			printf("%c ", buffer[i]);
+//		}
 		
-		value = bytes_to_int(buffer, 4);
-		
-		printf(" (%d)\n", value);
+		//value = bytes_to_int(buffer, 4);
+                int data_length = sizeof(buffer);
+
+		unsigned char encrypted_data[data_length];
+		memcpy(encrypted_data, buffer, 5*sizeof(uint8_t));
+
+		unsigned char decrypted_data[] = {data_length};
+		decrypt_ciphertext(encrypted_data, data_length, decrypted_data);
+
+		int decry_data_len = sizeof(decrypted_data);
+		printUnsignedCharArray(decrypted_data, decry_data_len);
+
+		//printf(" (%d)\n", value);
 
 		// Action for OPEN, CLOSE or IDLE
 		
