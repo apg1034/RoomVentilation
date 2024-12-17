@@ -61,3 +61,41 @@ void aes_decrypt(
 
     AES_cbc_encrypt(encrypted_data, decrypted_data, encrypted_length, &decrypt_key, (unsigned char *)iv, AES_DECRYPT);
 }
+<<<<<<< HEAD
+=======
+
+int main() {
+    // Beispiel-Daten (Ciphertext, Schlüssel, IV)
+    unsigned char encrypted_data[] = {
+        0x8d, 0x89, 0x32, 0xca, 0x26, 0x2b, 0xe9, 0xe2, 0x6d, 0xec, 0xa2, 0x7e, 0xb9, 0x54, 0xa3, 0xce
+    }; // Beispiel: Verschlüsselter Text
+    int data_length = sizeof(encrypted_data);
+
+    unsigned char key[16] = {
+        0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38,
+        0x39, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36
+    }; // Beispiel-Schlüssel: "1234567890123456"
+
+    unsigned char iv[16] = {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+
+    // Puffer für den entschlüsselten Text (gleiche Größe wie Eingabedaten)
+    unsigned char decrypted_data[data_length];
+    memset(decrypted_data, 0, data_length);
+
+    // Entschlüsselung durchführen
+    aes_decrypt(encrypted_data, data_length, decrypted_data, key, iv);
+
+    // Ergebnis ausgeben
+    printf("Entschlüsselte Daten: ");
+    for (int i = 0; i < data_length; i++) {
+        if (decrypted_data[i] == '\0') break; // Stoppe bei Null-Terminierung
+        printf("%c", decrypted_data[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
+>>>>>>> adea0023f5c375dfcd32ecb78233ae5518a6c95d

@@ -69,6 +69,7 @@ int bytes_to_int(unsigned char *bytes, size_t length) {
     return result;
 }
 
+<<<<<<< HEAD
 
 void printUnsignedCharArray(const unsigned char* array, size_t length) {
     for (size_t i = 0; i < length; ++i) {
@@ -77,6 +78,8 @@ void printUnsignedCharArray(const unsigned char* array, size_t length) {
     printf("\n");
 }
 
+=======
+>>>>>>> adea0023f5c375dfcd32ecb78233ae5518a6c95d
 void decrypt_ciphertext(unsigned char *encrypted_data, int data_length, unsigned char *decrypted_data) {
     unsigned char key[16] = {
         0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38,
@@ -92,6 +95,7 @@ void decrypt_ciphertext(unsigned char *encrypted_data, int data_length, unsigned
 
     aes_decrypt(encrypted_data, data_length, decrypted_data, key, iv);
 
+<<<<<<< HEAD
     printf("%d",data_length);
     printUnsignedCharArray(encrypted_data,data_length);
     printUnsignedCharArray(decrypted_data,data_length);
@@ -100,6 +104,20 @@ void decrypt_ciphertext(unsigned char *encrypted_data, int data_length, unsigned
 }
 
 
+=======
+}
+
+
+void printUnsignedCharArray(const unsigned char* array, size_t length) {
+    for (size_t i = 0; i < length; ++i) {
+        printf("%c", array[i]);
+    }
+    printf("\n");
+}
+
+
+
+>>>>>>> adea0023f5c375dfcd32ecb78233ae5518a6c95d
 static void on_device_connect(gattlib_adapter_t* adapter, const char *dst, gattlib_connection_t* connection, int error, void* user_data) {
 	int ret;
 	size_t len;
@@ -135,6 +153,7 @@ static void on_device_connect(gattlib_adapter_t* adapter, const char *dst, gattl
 		
 		print_with_timestamp("Read UUID completed: ");
 		
+<<<<<<< HEAD
 		//for (uintptr_t i = 0; i < len; i++) {
 		//	printf("%c ", buffer[i]);
 		//}
@@ -142,6 +161,14 @@ static void on_device_connect(gattlib_adapter_t* adapter, const char *dst, gattl
 		//value = bytes_to_int(buffer, 4);
 
 		int data_length = len;
+=======
+//		for (uintptr_t i = 0; i < len; i++) {
+//			printf("%c ", buffer[i]);
+//		}
+		
+		//value = bytes_to_int(buffer, 4);
+                int data_length = sizeof(buffer);
+>>>>>>> adea0023f5c375dfcd32ecb78233ae5518a6c95d
 
 		unsigned char encrypted_data[data_length];
 		memcpy(encrypted_data, buffer, 5*sizeof(uint8_t));
@@ -150,7 +177,11 @@ static void on_device_connect(gattlib_adapter_t* adapter, const char *dst, gattl
 		decrypt_ciphertext(encrypted_data, data_length, decrypted_data);
 
 		int decry_data_len = sizeof(decrypted_data);
+<<<<<<< HEAD
 //		printUnsignedCharArray(decrypted_data, decry_data_len);
+=======
+		printUnsignedCharArray(decrypted_data, decry_data_len);
+>>>>>>> adea0023f5c375dfcd32ecb78233ae5518a6c95d
 
 		//printf(" (%d)\n", value);
 
