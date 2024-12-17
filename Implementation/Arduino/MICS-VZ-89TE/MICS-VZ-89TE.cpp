@@ -76,7 +76,30 @@ void MICS_VZ_89TE::getVersion(void) {
 
 bool MICS_VZ_89TE::begin() {
     Wire.begin();
+    Serial.println("Waiting for sensor power-on self-test...");
+
+    unsigned long startMillis = millis();
+    const unsigned long selfTestDuration = 2000; // 2 seconds
+    while (millis() - startMillis < selfTestDuration) {
+        // Do nothing, wait for sensor to warm up
+    }
+
+    Serial.println("Checking I2C communication...");
+    Wire.beginTransmission(_i2caddr);
+    uint8_t error = Wire.endTransmission();
+
+    if (error == 0) {
+        Serial.println("Sensor at 0x70 is responding.");
+        return true;
+    } else {
+        Serial.print("I2C communication failed. Error code: ");
+        Serial.println(error);
+        return false;
+    }
 }
+
+
+
 
 /*
  After Power-on self-test (2 seconds) , the device will provide either a single “Failed Diagnostic
@@ -99,22 +122,20 @@ bool MICS_VZ_89TE::begin() {
  *
  */
 void MICS_VZ_89TE::readData(byte reg, uint8_t data[]) {
-    uint8_t i =0;
-    Wire.beginTransmission((uint8_t)_i2caddr);
-    Wire.write((uint8_t)reg); //This send the command to get data
-    Wire.write(0x0);
-    Wire.write(0x0);
-    Wire.write(0x0);
-    Wire.write(0x0);
-    Wire.write(0x0);
-    Wire.endTransmission();
-    
-    Wire.beginTransmission(0xE1);
-    Wire.endTransmission();
-    
-    Wire.requestFrom((uint8_t)_i2caddr, (byte)7);
-    for (i=0; i<7; i++) {
-    data[i] = Wire.read();
-    }
+    uint8_t i = 0;
 
+    // Send command to the correct I2C address
+    Wire.beginTransmission(_i2caddr);
+    Wire.write((uint8_t)reg); // Register/command to read
+    Wire.endTransmission();
+
+    // Request 7 bytes from the sensor
+    Wire.requestFrom((uint8_t)_i2caddr, (byte)7);
+    if (Wire.available() == 7) { // Ensure 7 bytes are available
+        for (i = 0; i < 7; i++) {
+            data[i] = Wire.read();
+        }
+    } else {
+        Serial.println("Error: Not enough data received from sensor.");
+    }
 }

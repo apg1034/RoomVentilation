@@ -54,13 +54,32 @@ float MICS_VZ_89TE::getStatus(void) {
 void MICS_VZ_89TE::readSensor(void) {
     static uint8_t data[7];
     readData(MICS_VZ_89TE_ADDR_CMD_GETSTATUS, data);
-    
-    status = data[5];
-    
-    co2 = (data[1] - 13) * (1600.0 / 229) + 400; // ppm: 400 .. 2000
-    voc = (data[0] - 13) * (1000.0/229); // ppb: 0 .. 1000
 
+    // Print raw sensor data
+    Serial.print("Raw Sensor Data: ");
+    for (int i = 0; i < 7; i++) {
+        Serial.print(data[i], HEX);
+        Serial.print(" ");
+    }
+    Serial.println();
+
+    status = data[5];
+
+    if (data[1] >= 13 && data[1] <= 242) {
+        co2 = (data[1] - 13) * (1600.0 / 229) + 400; // Valid CO2 range
+    } else {
+        Serial.println("Error: Invalid CO2 value received.");
+        co2 = 400; // Default fallback
+    }
+
+    if (data[0] >= 13 && data[0] <= 242) {
+        voc = (data[0] - 13) * (1000.0 / 229); // Valid VOC range
+    } else {
+        Serial.println("Error: Invalid VOC value received.");
+        voc = 0; // Default fallback
+    }
 }
+
 
 void MICS_VZ_89TE::getVersion(void) {
     static uint8_t data[7];
@@ -76,7 +95,42 @@ void MICS_VZ_89TE::getVersion(void) {
 
 bool MICS_VZ_89TE::begin() {
     Wire.begin();
+    Serial.println("Waiting for sensor power-on self-test...");
+
+    unsigned long startMillis = millis();
+    const unsigned long selfTestDuration = 2000; // 2 seconds
+
+    while (millis() - startMillis < selfTestDuration) {
+        // Do nothing, wait for sensor to warm up
+    }
+
+    // Check I2C communication
+    Serial.println("Checking I2C communication...");
+    Wire.beginTransmission(_i2caddr);
+    uint8_t error = Wire.endTransmission();
+
+    if (error == 0) {
+        Serial.println("Sensor at 0x70 is responding.");
+
+        // Read status byte to confirm sensor state
+        uint8_t testData[7];
+        readData(MICS_VZ_89TE_ADDR_CMD_GETSTATUS, testData);
+        if (testData[1] == 0x00 || testData[1] == 0xFF) {
+            Serial.println("Sensor returned invalid data during initialization.");
+            return false;
+        }
+
+        return true;
+    } else {
+        Serial.print("I2C communication failed. Error code: ");
+        Serial.println(error);
+        return false;
+    }
 }
+
+
+
+
 
 /*
  After Power-on self-test (2 seconds) , the device will provide either a single “Failed Diagnostic
@@ -118,3 +172,5 @@ void MICS_VZ_89TE::readData(byte reg, uint8_t data[]) {
     }
 
 }
+
+
