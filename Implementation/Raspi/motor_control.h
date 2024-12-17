@@ -10,5 +10,9 @@
 
 void initializeMotor();
 void rotateMotor(int steps, int direction);
+void rotateMotorWithThreshold(int direction, int stop_threshold);
+void openWindow();
+void closeWindow();
+
 
 #endif // MOTOR_CONTROL_H

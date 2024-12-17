@@ -1,39 +1,61 @@
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+#include <assert.h>
+
+#include "fan_control.h"
 #include "motor_control.h"
 #include "led_control.h"
-
-#define CO2_THRESHOLD 450
-
-void trigger_motor_and_led() {
-    printf("CO2 level above threshold. Triggering motor and LED.\n");
-    turnOnLED();          // Turn on the LED
-    rotateMotor(STEPS_PER_REV, 1); // Rotate the motor clockwise
-}
+#include "bluetooth_control.h"
+#include "crypto_control.h"
+#include "action_control.h"
+#include "encoder_control.h"
+#include "constants.h"
 
 int main() {
-    // Initialize motor and LED
+    // Initialize motor, LED, and encoder
     initializeMotor();
     initializeLED();
-    printf("Motor and LED initialized.\n");
+    initializeEncoder();
+    calibrateWindowPosition();
+    printf("Motor, LED, and Encoder Initialized.\n");
 
-    // Replace with test loop, simulating CO2 and VOC readings
-    while (1) {
-        // Simulating CO2 and VOC readings
-        float co2 = rand() % 1000; // Simulate a random CO2 value (0-999)
-        float voc = rand() % 1000; // Simulate a random VOC value (0-999)
-
-        printf("CO2: %.2f, VOC: %.2f\n", co2, voc);
-
-        // Check CO2 threshold and trigger motor and LED if needed
-        if (co2 > CO2_THRESHOLD) {
-            trigger_motor_and_led();
-        }
-
-        sleep(10); // Read every 10 seconds
+    // Initialize Bluetooth
+    if (initializeBluetooth()) {
+        printf("Bluetooth initialized.\n");
+    } else {
+        printf("Cannot initialize Bluetooth.\n");
+        return EXIT_FAILURE; // Exit the program if Bluetooth initialization fails
     }
 
-    return 0;
+    // Run the Bluetooth measurement loop
+    if (!runBluetooth()) {
+        printf("Program exit by user... \n");
+    } else {
+        printf("Program exit with failure ... \n");
+    }
+
+    // Main operation loop
+    while (1) {
+        int current_position = getEncoderPosition();
+
+        if (current_position < OPEN_THRESHOLD) {
+            printf("Opening window. Current Encoder Position: %d\n", current_position);
+            rotateMotorWithThreshold(1, OPEN_THRESHOLD);
+            printf("Window opened. Final Encoder Position: %d\n", getEncoderPosition());
+        }
+
+        if (current_position > CLOSE_THRESHOLD) {
+            printf("Closing window. Current Encoder Position: %d\n", current_position);
+            rotateMotorWithThreshold(-1, CLOSE_THRESHOLD);
+            printf("Window closed. Final Encoder Position: %d\n", getEncoderPosition());
+        }
+    }
+
+    // Clean up
+    turnOffLED(); // Ensure the LED is turned off before exiting
+    printf("System shutdown complete.\n");
+
+    return EXIT_SUCCESS;
 }

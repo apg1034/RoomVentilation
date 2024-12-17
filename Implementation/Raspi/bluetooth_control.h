@@ -1,0 +1,3 @@
+
+bool initializeBluetooth();
+bool runBluetooth();
