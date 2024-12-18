@@ -143,7 +143,7 @@ void setup() {
     // Warm-up period for the CO2 sensor
     Serial.println("Warming up CO2 sensor...");
     unsigned long warmUpStart = millis();
-    const unsigned long warmUpTime = 100; // 120 seconds
+    const unsigned long warmUpTime = 10; // 120 seconds
     while (millis() - warmUpStart < warmUpTime) {
         if ((millis() - warmUpStart) % 10000 == 0) { // Print every 10 seconds
             Serial.print("Warming up: ");
@@ -256,10 +256,11 @@ void loop() {
             timestamp = millis();
         }
     } else {
-        unsigned long currentMillis = millis();
-        if (currentMillis - noCentralPreviousMillis >= noCentralInterval) {
-            noCentralPreviousMillis = currentMillis;
-            BLE.advertise();
-        }
+    unsigned long currentMillis = millis();
+    if (currentMillis - noCentralPreviousMillis >= noCentralInterval) {
+        noCentralPreviousMillis = currentMillis;
+        BLE.advertise();
     }
+}
+
 }
