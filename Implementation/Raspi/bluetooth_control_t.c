@@ -1,3 +1,4 @@
+#include "common.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -10,13 +11,17 @@
 #include "led_control.h"
 #include "action_control.h"
 #include "crypto_control.h"
+#include "mail_control.h"
 
+// Requirment 6.2.1.4
 #define SENSOR_ID "87654321-4321-6789-4321-fedcba987654"
 #define MAC_ADDR "4C:11:AE:C9:80:12"
 #define BLE_SCAN_TIMEOUT 10
 #define ERROR_WAIT_TIME 10
 #define READ_WAIT_TIME 1
 #define HMAC_LENGTH 32 // Length of the HMAC-SHA256 digest
+
+extern unsigned long millis();
 
 static struct {
     char *adapter_name;
@@ -48,19 +53,10 @@ bool kbhit(void) {
     return (characters_buffered != 0);
 }
 
-void printUnsignedCharArray(const unsigned char *array, size_t length) {
-    for (size_t i = 0; i < length; ++i) {
-        printf("%02X ", array[i]);
-        if ((i + 1) % 16 == 0) { // Add a newline every 16 bytes for readability
-            printf("\n");
-        }
-    }
-    printf("\n"); // Ensure a newline at the end
-    fflush(stdout); // Flush the output to ensure it appears immediately
-}
 
 void decrypt_and_verify(const unsigned char *encrypted_data, int data_length, unsigned char *decrypted_data) {
-    printf("Step 1: Received Encrypted Data:\n");
+    // Requirement 6.2.3.1
+    print_with_timestamp("Step 1: Received Encrypted Data:\n");
     printUnsignedCharArray(encrypted_data, data_length);
 
     decrypt_ciphertext(encrypted_data, data_length, decrypted_data);
@@ -100,8 +96,12 @@ static void on_device_connect(gattlib_adapter_t *adapter, const char *dst, gattl
         printUnsignedCharArray(buffer, len);
 
         unsigned char decrypted_data[256] = {0}; // Ensure enough space for decrypted output
+	// Requirement 6.2.4.1
         decrypt_and_verify(buffer, len, decrypted_data);
 
+	// Requirment 6.3.6
+	// Requirment 6.3.8
+	// Requirment 6.3.9
         if (strstr((char *)decrypted_data, "OPEN")) {
             print_with_timestamp("Action: OPEN detected.\n");
             actionOpen();
@@ -114,11 +114,16 @@ static void on_device_connect(gattlib_adapter_t *adapter, const char *dst, gattl
             print_with_timestamp("Unknown action detected: %s\n", decrypted_data);
         }
 
+	// Requirement 6.1.3.1
+	// TODO - Ack Handling
+
+
         if (kbhit()) {
             print_with_timestamp("Exit.\n");
             break;
         }
 
+	// Requirement 6.2.5.1 - for testing set to 1 second instead of 10 seconds
         sleep(READ_WAIT_TIME);
     }
 
@@ -150,6 +155,7 @@ static void ble_discovered_device(gattlib_adapter_t *adapter, const char *addr, 
         print_with_timestamp("Scan disable failed.\n");
     }
 
+    // Requirement 6.3.1 / 6.3.2 - vica versa
     if (gattlib_connect(adapter, addr, GATTLIB_CONNECTION_OPTIONS_NONE, on_device_connect, NULL)) {
         print_with_timestamp("Failed to connect to bluetooth device '%s'\n", addr);
     }
@@ -193,23 +199,41 @@ bool initializeBluetooth() {
 }
 
 bool runBluetooth() {
+    unsigned long last_retry_time = millis(); // Track the last retry time
+    // Requirement 6.1.1.5
+    const unsigned long retry_interval = ERROR_WAIT_TIME * 10000; // Retry interval in milliseconds - for testing set to 1 second instead on 10 seconds
+
     while (1) {
         if (gattlib_mainloop(ble_task, NULL) != GATTLIB_SUCCESS) {
             print_with_timestamp("Failed to create gattlib mainloop\n");
-            return true;
+            //return true;
         }
 
         if (state == READERROR) {
-            retryCount++;
-            if (retryCount > 2) {
+            // Requirement 6.3.3
+            // Requirment 6.3.4
+            for (int i = 0; i < 5; i++) {
                 turnOffLED();
+                sleep(1);
+                turnOnLED();
+                sleep(1);
+            }
+
+            retryCount++;
+            last_retry_time = millis(); // Update retry time
+
+            print_with_timestamp("Reading failed: retryCount = %i\n", retryCount);
+            if (retryCount > 2) {
+                print_with_timestamp("Retry limit exceeded. Turning off LED, sending Mail & exiting...\n");
+                turnOffLED();
+                // Requirement 6.1.1.4
+                sendMail();
                 return true;
             }
         } else {
+            retryCount = 0; // Reset retry count if connection is successful
             break;
         }
-
-        sleep(ERROR_WAIT_TIME);
     }
 
     return false;

@@ -8,6 +8,7 @@
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
 #include <openssl/err.h>
+#include "common.h"
 
 // Base64 decoding function
 int base64_decode(const char *base64_input, unsigned char **decoded_output) {
@@ -148,11 +149,14 @@ void decrypt_ciphertext(
     int data_length,
     unsigned char *decrypted_data
 ) {
+    // Requirement 6.2.1.3
+    // TODO - DH
     unsigned char key[16] = {
         0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38,
         0x39, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36
     };
     unsigned char iv[16] = { 0 };
+    // Requirement 6.2.1.1
     unsigned char hmac_key[16] = {
         0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48,
         0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F, 0x50
