@@ -11,7 +11,7 @@ MICS_VZ_89TE CO2SENSOR;
 // LED and sensor parameters
 #define LED_PIN 3
 #define ERROR_LED_PIN 4
-#define CO2_THRESHOLD 400
+#define CO2_THRESHOLD 1000
 #define NUM_READINGS 5
 
 // Variables for averaging
@@ -23,6 +23,9 @@ bool initialized = false;
 BLEService sensorService("12345678-1234-5678-1234-56789abcdef0");
 BLECharacteristic statusCharacteristic("87654321-4321-6789-4321-fedcba987654", BLERead | BLENotify, 64);
 
+// Requirement 6.2.1.3
+// TODO - DH
+
 // AES Keys
 AESLib aes;
 byte aes_key[16] = {0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36};
@@ -33,6 +36,7 @@ byte enc_iv_to[N_BLOCK] = {0};
 byte enc_iv_from[N_BLOCK] = {0};
 
 // HMAC Key
+// Requirement 6.2.1.1
 byte hmac_key[16] = {0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F, 0x50};
 
 // Timing
@@ -51,6 +55,9 @@ const long noCentralInterval = 1000;
 
 char statusStr[32] = {0};
 
+// Requirement 6.2.1.2
+// Requirement 6.2.2.1
+// Requirement 6.2.4.1
 uint16_t encrypt_to_ciphertext_with_hmac(char *msg, byte iv[]) {
     int msgLen = strlen(msg);
     int paddedLen = ((msgLen + 15) / 16) * 16; // Round up to the nearest multiple of 16
@@ -121,7 +128,29 @@ uint16_t encrypt_to_ciphertext_with_hmac(char *msg, byte iv[]) {
     return base64Length;
 }
 
+void printUptime(){
+  unsigned long currentMillis = millis(); // Get the current time in milliseconds
 
+  // Convert millis to hours, minutes, seconds, and milliseconds
+  unsigned long totalSeconds = currentMillis / 1000;
+  unsigned long milliseconds = currentMillis % 1000;
+  unsigned long seconds = totalSeconds % 60;
+  unsigned long minutes = (totalSeconds / 60) % 60;
+  unsigned long hours = (totalSeconds / 3600);
+
+  // Print the formatted time
+  Serial.print(hours);
+  Serial.print(":");
+  if (minutes < 10) Serial.print("0"); // Add leading zero
+  Serial.print(minutes);
+  Serial.print(":");
+  if (seconds < 10) Serial.print("0"); // Add leading zero
+  Serial.print(seconds);
+  Serial.print(".");
+  if (milliseconds < 100) Serial.print("0"); // Add leading zeros for milliseconds
+  if (milliseconds < 10) Serial.print("0");
+  Serial.println(milliseconds);
+}
 
 void setup() {
     // Initialize Serial communication
@@ -133,7 +162,7 @@ void setup() {
     // Initialize LEDs
     pinMode(LED_PIN, OUTPUT);
     pinMode(ERROR_LED_PIN, OUTPUT);
-    digitalWrite(ERROR_LED_PIN, HIGH); // Error LED ON initially (assume failure)
+    digitalWrite(ERROR_LED_PIN, LOW); // Error LED OFF initially
 
     Serial.println("Starting setup...");
 
@@ -208,18 +237,26 @@ void setup() {
     }
 
     // Final Initialization Check
+    
     if (initSuccess) {
-        digitalWrite(ERROR_LED_PIN, LOW); // Turn OFF Error LED for successful initialization
-        Serial.println("Initialization successful. Error LED OFF.");
+        // Requirement 6.1.1.1
+        digitalWrite(ERROR_LED_PIN, HIGH); // Turn ON Error LED for successful initialization
+        Serial.println("Initialization successful. Error LED ON.");
     } else {
+        // Requirement 6.1.1.0
         Serial.println("Initialization failed. Error LED remains ON.");
+        digitalWrite(ERROR_LED_PIN, LOW); // Turn OFF Error LED for unsuccessful initialization
     }
 }
 
 void loop() {
+
     BLEDevice central = BLE.central();
 
+    // Requirement 6.3.1 / 6.3.2 - vica versa
+    // Arduino waiting for connection
     if (central) {
+        // Requirement 6.3.5
         if (millis() - timestamp > interval) {
             Serial.print("Connected to central: ");
             Serial.println(central.address());
@@ -227,6 +264,11 @@ void loop() {
             // Read sensor values
             CO2SENSOR.readSensor();
             float co2 = CO2SENSOR.getCO2();
+
+            // Requirement 6.1.2.1
+            // Requirement 6.1.2.2
+            // TODO - test value against average
+            
 
             // Print CO2 ppm value to serial monitor
             Serial.print("CO2 ppm: ");
@@ -245,16 +287,32 @@ void loop() {
             }
 
             // Encrypt and send the state message
+            // Requirement 6.2.4.2 - default strings are "open" & "close"
             snprintf(statusStr, sizeof(statusStr), "State: %s", currentState == OPEN ? "OPEN" : currentState == CLOSE ? "CLOSE" : "IDLE");
             memcpy(enc_iv_to, aes_iv, sizeof(aes_iv));
             encrypt_to_ciphertext_with_hmac(statusStr, enc_iv_to);
 
+            // Requirement 6.2.3.1
+            Serial.print("Uptime:");
+            printUptime();
             Serial.print("Sent Encrypted State with HMAC: ");
-            Serial.println(ciphertext);
+            Serial.println(ciphertext);            
 
+            // Requirement 6.3.7
             statusCharacteristic.writeValue((byte *)ciphertext, strlen(ciphertext));
+
             timestamp = millis();
+        } else{
+            // Requirement 6.1.3.1
+            // Requirement 6.1.3.2
+            // Requirement 6.1.3.3
+            // Requirement 6.1.3.4
+            // Requirement 6.2.5.2
+            // Requirement 6.2.5.3
+            // Requirement 6.3.3
+            // TODO - Handling with Acks
         }
+
     } else {
     unsigned long currentMillis = millis();
     if (currentMillis - noCentralPreviousMillis >= noCentralInterval) {
