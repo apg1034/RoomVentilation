@@ -51,6 +51,17 @@ Für die Messung der aktuellen Position beim Öffnen und Schließen festzustelle
 
 In einem ersten Schritt wurde die Hardware laut Designdokument verdrahtet. Um den aktuelle Stellung beim Öffnen und Schließen des Fenster feststellen zu können mussten wir eine den Stellmotor mit einem Inkrementalgeber (ULN2003A Driver) verbunden werden. Beim Drehen des Motors werden die Impulse gezählt. Damit lässt sich die aktuelle Position (Fenster ist geschlossen, Fenster ist geöffnet) feststellen. Zusätzlich kann eine Sperre durch ein Hinderniss beim Öffnen und Schließen durch Feststellen eines "Schleppfehlers" fesgestellt werden.
 
+## Das Git Repository
+
+**Graphic**
+Grafische Artefakte für das Designdokument
+
+**IDP_Designdokument**
+In diesem Verzeichnis befindet sich sämtlich Dokumente für das Designdokument
+
+**Implementation**
+Programme für den Raspberry PI und dem Arduino
+
 ## Programmierung des Adruino
 
 ### Software
@@ -92,9 +103,16 @@ Um die entsprechenden Devices richtig anzusprechen zu können werden folgende  B
 Danach kann sämtliche Software aus dem Git Repository geladen werden und
 mit folgendem Befehl das Hauptprogramm gebaut werden.
 
+Projekt aus dem Git Repository clonen
+
+````
+gh repo clone apg1034/RoomVentilation
+````
+
 Build:
 
 ````
+cd RoomVentilation
 gcc -o main main.c motor_control.c led_control.c bluetooth_control_t.c action_control_t.c common.c mail_control.c fan_control.c crypto_control_t.c encoder_control.c -lwiringPi -lgattlib -lcurl -lcrypto
 ````
 
