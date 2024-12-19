@@ -90,7 +90,7 @@ Um die entsprechenden Devices richtig anzusprechen zu können werden folgende  B
 - curl
 
 Danach kann sämtliche Software aus dem Git Repository geladen werden und
-mit folgedem Befehl das Hauptprogramm gebaut werden.
+mit folgendem Befehl das Hauptprogramm gebaut werden.
 
 Build:
 
