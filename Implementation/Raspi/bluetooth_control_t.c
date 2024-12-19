@@ -18,7 +18,7 @@
 #define MAC_ADDR "4C:11:AE:C9:80:12"
 #define BLE_SCAN_TIMEOUT 10
 #define ERROR_WAIT_TIME 10
-#define READ_WAIT_TIME 1
+#define READ_WAIT_TIME 5
 #define HMAC_LENGTH 32 // Length of the HMAC-SHA256 digest
 
 extern unsigned long millis();
@@ -63,6 +63,24 @@ void decrypt_and_verify(const unsigned char *encrypted_data, int data_length, un
 
     printf("Step 2: Decryption Completed. Decrypted Data (String): %s\n", decrypted_data);
     fflush(stdout);
+}
+
+// Funktion zum Schreiben in eine BLE-Charakteristik
+int write_ble_characteristic(gattlib_connection_t *connection, const char *uuid_str, unsigned char *value, size_t value_len) {
+    uuid_t uuid;
+    if (gattlib_string_to_uuid(uuid_str, strlen(uuid_str) + 1, &uuid) < 0) {
+        printf("Invalid UUID string: %s\n", uuid_str);
+        return -1;
+    }
+
+    // Schreiben der Charakteristik
+    int ret = gattlib_write_char_by_uuid(connection, &uuid, value, value_len);
+    if (ret != GATTLIB_SUCCESS) {
+        printf("Error %s\n", uuid_str);
+        return -1;
+    }
+    printf("Success %s\n", uuid_str);
+    return 0;
 }
 
 static void on_device_connect(gattlib_adapter_t *adapter, const char *dst, gattlib_connection_t *connection, int error, void *user_data) {
@@ -116,6 +134,16 @@ static void on_device_connect(gattlib_adapter_t *adapter, const char *dst, gattl
 
 	// Requirement 6.1.3.1
 	// TODO - Ack Handling
+        const char *ack_message = "ack";  // String "ack"
+        
+        // Umwandlung von const char* zu unsigned char*:
+        unsigned char ack_message_bytes[strlen(ack_message) + 1];  // +1 für das Nullterminierungszeichen
+        memcpy(ack_message_bytes, ack_message, strlen(ack_message) + 1);  // Kopiere die Bytes in ein unsigned char Array
+
+        // Schreiben von "ack" in die Charakteristik
+        if (write_ble_characteristic(connection, "98765432-4321-6789-4321-fedcba987654", ack_message_bytes, strlen(ack_message)) != 0) {
+            printf("Error writing 'ack' to characteristic.\n");
+        }
 
 
         if (kbhit()) {
