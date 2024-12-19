@@ -32,8 +32,6 @@ Die Umsetzung erfolgte im wesentlichen in drei Schritten:
 2. Erstellung eines Design Dokumentes (Anforderungen, Data Flow Diagram, Hazards).
 3. Umsetzung und Implementierung des Projektes
 
-Das Projekt Team setzt sich aus folgenden Personen zusammen:
-
 ## Das Projektteam
 
 Das Projekt Team setzt sich aus folgenden Personen zusammen:
