@@ -73,7 +73,7 @@ Zusätzlich werden folgende Bibliotheken benötigt.
 Teile davon befindet sich auch in unserem GitHub Repository 
 im RoomVentilation/Implementation/Arduino 
 
-Sämtliche Software aus dem Git Repository muss nit Hilfe der IDE auf dem Arduino installiert und gebaut werden. Dazu muss der Arduino mit Hilfe eines Micro-USB Kabels angeschlossen werden. Dadurch wird der Arduino auch mit Strom versorgt. 
+Sämtliche Software aus dem Git Repository muss mit Hilfe der IDE auf dem Arduino installiert und gebaut werden. Dazu muss der Arduino mit Hilfe eines Micro-USB Kabels angeschlossen werden. Dadurch wird der Arduino auch mit Strom versorgt. 
 
 ## Programmierung des Raspberry Pi
 
