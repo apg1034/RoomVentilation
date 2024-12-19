@@ -54,12 +54,15 @@ In einem ersten Schritt wurde die Hardware laut Designdokument verdrahtet. Um de
 ## Das Git Repository
 
 **Graphic**
+
 Grafische Artefakte für das Designdokument
 
 **IDP_Designdokument**
+
 In diesem Verzeichnis befindet sich sämtlich Dokumente für das Designdokument
 
 **Implementation**
+
 Programme für den Raspberry PI und dem Arduino
 
 ## Programmierung des Adruino
