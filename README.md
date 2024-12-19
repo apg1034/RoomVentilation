@@ -24,7 +24,7 @@ Futher Details: https://github.com/apg1034/RoomVentilation/blob/main/IDP_Designd
 
 ## Einleitung
 
-An der FH Campus Wien wurde im Rahmen eines Interdiszipliärem Projekt ein selbst gewähltes Projekt umgesetzt.
+An der FH Campus Wien wurde im Rahmen eines Interdiszipliären Projekts ein selbst gewähltes Projekt umgesetzt.
 
 Die Umsetzung erfolgte im wesentlichen in drei Schritten:
 
