@@ -18,10 +18,12 @@ MICS_VZ_89TE CO2SENSOR;
 float previousReadings[NUM_READINGS];
 int readingIndex = 0;
 bool initialized = false;
+bool waitingforack = false;
 
 // BLE characteristics
 BLEService sensorService("12345678-1234-5678-1234-56789abcdef0");
 BLECharacteristic statusCharacteristic("87654321-4321-6789-4321-fedcba987654", BLERead | BLENotify, 64);
+BLECharacteristic ackCharacteristic("98765432-4321-6789-4321-fedcba987654", BLEWrite , 64);
 
 // Requirement 6.2.1.3
 // TODO - DH
@@ -200,6 +202,22 @@ void setup() {
             }
         }
     }
+    CO2SENSOR.readSensor();
+    float co2 = CO2SENSOR.getCO2();
+    previousReadings[0] = co2;
+    delay(1000);
+    co2 = CO2SENSOR.getCO2();
+    previousReadings[1] = co2;
+    delay(1000);
+    co2 = CO2SENSOR.getCO2();
+    previousReadings[2] = co2;
+    delay(1000);
+    co2 = CO2SENSOR.getCO2();
+    previousReadings[3] = co2;
+    delay(1000);
+    co2 = CO2SENSOR.getCO2();
+    previousReadings[4] = co2;
+
     if (!sensorInitialized) {
         Serial.println("CO2 Sensor initialization failed! Check wiring and power.");
         initSuccess = false;
@@ -231,6 +249,7 @@ void setup() {
         BLE.setLocalName("ArduinoNano33IoT");
         BLE.setAdvertisedService(sensorService);
         sensorService.addCharacteristic(statusCharacteristic);
+        sensorService.addCharacteristic(ackCharacteristic);
         BLE.addService(sensorService);
         BLE.advertise();
         Serial.println("BLE advertising and sensor started...");
@@ -267,18 +286,35 @@ void loop() {
 
             // Requirement 6.1.2.1
             // Requirement 6.1.2.2
-            // TODO - test value against average
-            
+            // Calculate the average of the last NUM_READINGS
+            float averageCO2 = 0;
+            Serial.print("Letzte Werte: ");
+            for (int i = 0; i < NUM_READINGS; i++) {
+                averageCO2 += previousReadings[i];
+                Serial.print(previousReadings[i]);
+                Serial.print(", ");
+            }
+            averageCO2 /= NUM_READINGS;
+            Serial.println("");
+
+            if (abs(co2 - averageCO2) > 50) {
+                Serial.print("CO2 reading marked as invalid and dropped: ");
+                Serial.println(co2);
+            }else if (!waitingforack){
+                // Store the current reading in the previousReadings array
+                previousReadings[readingIndex] = co2;
+                readingIndex = (readingIndex + 1) % NUM_READINGS;
+            }
 
             // Print CO2 ppm value to serial monitor
             Serial.print("CO2 ppm: ");
             Serial.println(co2);
 
-            // Determine system state dynamically based on CO2 levels and thresholds
-            if (co2 > CO2_THRESHOLD) {
+            // Determine system state dynamically based on CO2 level-averages and thresholds
+            if (averageCO2 > CO2_THRESHOLD) {
                 currentState = OPEN;
                 Serial.println("System State: OPEN");
-            } else if (co2 <= CO2_THRESHOLD - 2) {
+            } else if (averageCO2 <= CO2_THRESHOLD - 2) {
                 currentState = CLOSE;
                 Serial.println("System State: CLOSE");
             } else {
@@ -298,8 +334,23 @@ void loop() {
             Serial.print("Sent Encrypted State with HMAC: ");
             Serial.println(ciphertext);            
 
+            ackCharacteristic.writeValue("");
+            
             // Requirement 6.3.7
             statusCharacteristic.writeValue((byte *)ciphertext, strlen(ciphertext));
+
+            waitingforack = true;
+
+
+            if(ackCharacteristic.written()){
+              waitingforack = false;
+              ackCharacteristic.writeValue("");
+              Serial.println("Ack recieved");
+            }else{
+              Serial.println("Still Waiting for Ack");
+            }
+
+
 
             timestamp = millis();
         } else{
