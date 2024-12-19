@@ -1,3 +1,4 @@
+// entire funcionality of the arduino is coded in this file
 #include "Base64.h"
 #include <ArduinoBLE.h>
 #include <string>
@@ -19,6 +20,7 @@ float previousReadings[NUM_READINGS];
 int readingIndex = 0;
 bool initialized = false;
 bool waitingforack = false;
+int retryCount = 0;
 
 // BLE characteristics
 BLEService sensorService("12345678-1234-5678-1234-56789abcdef0");
@@ -26,7 +28,7 @@ BLECharacteristic statusCharacteristic("87654321-4321-6789-4321-fedcba987654", B
 BLECharacteristic ackCharacteristic("98765432-4321-6789-4321-fedcba987654", BLEWrite , 64);
 
 // Requirement 6.2.1.3
-// TODO - DH
+// TODO - nicht abgeschlossen - DH
 
 // AES Keys
 AESLib aes;
@@ -43,7 +45,10 @@ byte hmac_key[16] = {0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A,
 
 // Timing
 const long interval = 10000; // 10 seconds
+const long blinkInterval = 1000; // 1 seconds
 long timestamp = 0;
+long ledtimestamp = 0;
+bool ledswitch = false;
 
 // State management
 enum SystemState { IDLE, OPEN, CLOSE };
@@ -60,6 +65,7 @@ char statusStr[32] = {0};
 // Requirement 6.2.1.2
 // Requirement 6.2.2.1
 // Requirement 6.2.4.1
+// Method to encrypt the plaintext and calculate the HMAC
 uint16_t encrypt_to_ciphertext_with_hmac(char *msg, byte iv[]) {
     int msgLen = strlen(msg);
     int paddedLen = ((msgLen + 15) / 16) * 16; // Round up to the nearest multiple of 16
@@ -130,6 +136,7 @@ uint16_t encrypt_to_ciphertext_with_hmac(char *msg, byte iv[]) {
     return base64Length;
 }
 
+// print the current Uptime
 void printUptime(){
   unsigned long currentMillis = millis(); // Get the current time in milliseconds
 
@@ -154,6 +161,7 @@ void printUptime(){
   Serial.println(milliseconds);
 }
 
+// Setup & Initialisation
 void setup() {
     // Initialize Serial communication
     Serial.begin(57600);
@@ -202,19 +210,21 @@ void setup() {
             }
         }
     }
+
+    // initialize the Average-Array of measured values
     CO2SENSOR.readSensor();
     float co2 = CO2SENSOR.getCO2();
     previousReadings[0] = co2;
-    delay(1000);
+//    delay(1000);
     co2 = CO2SENSOR.getCO2();
     previousReadings[1] = co2;
-    delay(1000);
+//    delay(1000);
     co2 = CO2SENSOR.getCO2();
     previousReadings[2] = co2;
-    delay(1000);
+//    delay(1000);
     co2 = CO2SENSOR.getCO2();
     previousReadings[3] = co2;
-    delay(1000);
+//   delay(1000);
     co2 = CO2SENSOR.getCO2();
     previousReadings[4] = co2;
 
@@ -268,6 +278,7 @@ void setup() {
     }
 }
 
+// Loop for running-state
 void loop() {
 
     BLEDevice central = BLE.central();
@@ -276,6 +287,7 @@ void loop() {
     // Arduino waiting for connection
     if (central) {
         // Requirement 6.3.5
+        // Update/Send the Characteristic every 10 Seconds
         if (millis() - timestamp > interval) {
             Serial.print("Connected to central: ");
             Serial.println(central.address());
@@ -297,6 +309,7 @@ void loop() {
             averageCO2 /= NUM_READINGS;
             Serial.println("");
 
+            // check for valid meassurements
             if (abs(co2 - averageCO2) > 50) {
                 Serial.print("CO2 reading marked as invalid and dropped: ");
                 Serial.println(co2);
@@ -334,34 +347,42 @@ void loop() {
             Serial.print("Sent Encrypted State with HMAC: ");
             Serial.println(ciphertext);            
 
-            ackCharacteristic.writeValue("");
             
-            // Requirement 6.3.7
-            statusCharacteristic.writeValue((byte *)ciphertext, strlen(ciphertext));
-
-            waitingforack = true;
-
-
-            if(ackCharacteristic.written()){
-              waitingforack = false;
-              ackCharacteristic.writeValue("");
-              Serial.println("Ack recieved");
-            }else{
-              Serial.println("Still Waiting for Ack");
-            }
-
-
-
-            timestamp = millis();
-        } else{
             // Requirement 6.1.3.1
             // Requirement 6.1.3.2
             // Requirement 6.1.3.3
             // Requirement 6.1.3.4
             // Requirement 6.2.5.2
             // Requirement 6.2.5.3
-            // Requirement 6.3.3
-            // TODO - Handling with Acks
+            // Acknowledgement Handling
+            waitingforack = true;
+            if(ackCharacteristic.written()){
+              waitingforack = false;
+              ackCharacteristic.writeValue("");
+              Serial.println("Ack recieved");
+              retryCount=0;
+            }else{
+              Serial.println("Still Waiting for Ack");
+              retryCount+=1;
+            }
+
+            // Requirement 6.3.7
+            statusCharacteristic.writeValue((byte *)ciphertext, strlen(ciphertext));
+
+            timestamp = millis();
+
+        // blinking LED if no Acks recieved
+        } else if (retryCount>2){
+          if (millis() - ledtimestamp > blinkInterval) {
+            if (ledswitch) {
+              digitalWrite(ERROR_LED_PIN, LOW);
+              ledswitch=false;
+            }else{
+              digitalWrite(ERROR_LED_PIN, HIGH);
+              ledswitch=true;
+            }
+            ledtimestamp = millis();
+          }
         }
 
     } else {
