@@ -1,9 +1,9 @@
+// implements all modules and combines their functionality
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 #include <assert.h>
-
 #include "fan_control.h"
 #include "motor_control.h"
 #include "led_control.h"

@@ -1,3 +1,4 @@
+
 void setAction(int value);
 void actionOpen();
 void actionClose();
@@ -6,3 +7,4 @@ void closeWindow();
 void runVentilation();
 void stopVentilation();
 void calibrateWindowPosition();
+

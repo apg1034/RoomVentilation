@@ -1,3 +1,4 @@
+// controls the entire bluetooth-communication with the implemented crypto-module
 #include "common.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,6 +13,8 @@
 #include "action_control.h"
 #include "crypto_control.h"
 #include "mail_control.h"
+#include <stdarg.h>
+#include <time.h>
 
 // Requirment 6.2.1.4
 #define SENSOR_ID "87654321-4321-6789-4321-fedcba987654"
@@ -36,6 +39,7 @@ static pthread_mutex_t m_connection_terminated_lock = PTHREAD_MUTEX_INITIALIZER;
 enum { UNINITIALIZED, FOUND, CONNECTED, READERROR, DISCONNECT } state = UNINITIALIZED;
 int retryCount = 0;
 
+// Non-blocking input detection
 bool kbhit(void) {
     struct termios original;
     tcgetattr(STDIN_FILENO, &original);
@@ -53,7 +57,7 @@ bool kbhit(void) {
     return (characters_buffered != 0);
 }
 
-
+// decrypts the recieved ciphertext and verifies the HMAC
 void decrypt_and_verify(const unsigned char *encrypted_data, int data_length, unsigned char *decrypted_data) {
     // Requirement 6.2.3.1
     print_with_timestamp("Step 1: Received Encrypted Data:\n");
@@ -65,7 +69,7 @@ void decrypt_and_verify(const unsigned char *encrypted_data, int data_length, un
     fflush(stdout);
 }
 
-// Funktion zum Schreiben in eine BLE-Charakteristik
+// function to write to a BLE-characteristic
 int write_ble_characteristic(gattlib_connection_t *connection, const char *uuid_str, unsigned char *value, size_t value_len) {
     uuid_t uuid;
     if (gattlib_string_to_uuid(uuid_str, strlen(uuid_str) + 1, &uuid) < 0) {
@@ -73,7 +77,6 @@ int write_ble_characteristic(gattlib_connection_t *connection, const char *uuid_
         return -1;
     }
 
-    // Schreiben der Charakteristik
     int ret = gattlib_write_char_by_uuid(connection, &uuid, value, value_len);
     if (ret != GATTLIB_SUCCESS) {
         printf("Error %s\n", uuid_str);
@@ -83,6 +86,7 @@ int write_ble_characteristic(gattlib_connection_t *connection, const char *uuid_
     return 0;
 }
 
+// handels an opened connection and executes actions based on recieved state
 static void on_device_connect(gattlib_adapter_t *adapter, const char *dst, gattlib_connection_t *connection, int error, void *user_data) {
     int ret;
     size_t len;
@@ -117,6 +121,14 @@ static void on_device_connect(gattlib_adapter_t *adapter, const char *dst, gattl
 	// Requirement 6.2.4.1
         decrypt_and_verify(buffer, len, decrypted_data);
 
+	time_t now = time(NULL);
+	char timestamp[20];
+	strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", localtime(&now));
+
+	FILE* logFile = fopen("logging.log", "a");
+	fprintf(logFile, "[%s] : message recieved \n", timestamp);
+	fclose(logFile);
+
 	// Requirment 6.3.6
 	// Requirment 6.3.8
 	// Requirment 6.3.9
@@ -133,12 +145,10 @@ static void on_device_connect(gattlib_adapter_t *adapter, const char *dst, gattl
         }
 
 	// Requirement 6.1.3.1
-	// TODO - Ack Handling
-        const char *ack_message = "ack";  // String "ack"
-        
-        // Umwandlung von const char* zu unsigned char*:
-        unsigned char ack_message_bytes[strlen(ack_message) + 1];  // +1 für das Nullterminierungszeichen
-        memcpy(ack_message_bytes, ack_message, strlen(ack_message) + 1);  // Kopiere die Bytes in ein unsigned char Array
+        const char *ack_message = "ack";
+
+        unsigned char ack_message_bytes[strlen(ack_message) + 1];
+        memcpy(ack_message_bytes, ack_message, strlen(ack_message) + 1);
 
         // Schreiben von "ack" in die Charakteristik
         if (write_ble_characteristic(connection, "98765432-4321-6789-4321-fedcba987654", ack_message_bytes, strlen(ack_message)) != 0) {
@@ -163,6 +173,7 @@ static void on_device_connect(gattlib_adapter_t *adapter, const char *dst, gattl
     pthread_mutex_unlock(&m_connection_terminated_lock);
 }
 
+// input handing
 static int stricmp(char const *a, char const *b) {
     for (;; a++, b++) {
         int d = tolower((unsigned char)*a) - tolower((unsigned char)*b);
@@ -171,6 +182,7 @@ static int stricmp(char const *a, char const *b) {
     }
 }
 
+// discovers BLE device with given MAC
 static void ble_discovered_device(gattlib_adapter_t *adapter, const char *addr, const char *name, void *user_data) {
     if (stricmp(addr, m_argument.mac_address) != 0) {
         return;
@@ -189,6 +201,7 @@ static void ble_discovered_device(gattlib_adapter_t *adapter, const char *addr, 
     }
 }
 
+// opens BLE Adapter
 static void *ble_task(void *arg) {
     gattlib_adapter_t *adapter;
 
@@ -214,6 +227,7 @@ static void *ble_task(void *arg) {
     return NULL;
 }
 
+// initializes bluetooth
 bool initializeBluetooth() {
     m_argument.adapter_name = NULL;
     m_argument.mac_address = MAC_ADDR;
@@ -226,6 +240,7 @@ bool initializeBluetooth() {
     return true;
 }
 
+// main Bluetooth method
 bool runBluetooth() {
     unsigned long last_retry_time = millis(); // Track the last retry time
     // Requirement 6.1.1.5
@@ -238,7 +253,6 @@ bool runBluetooth() {
         }
 
         if (state == READERROR) {
-            // Requirement 6.3.3
             // Requirment 6.3.4
             for (int i = 0; i < 5; i++) {
                 turnOffLED();
@@ -251,6 +265,7 @@ bool runBluetooth() {
             last_retry_time = millis(); // Update retry time
 
             print_with_timestamp("Reading failed: retryCount = %i\n", retryCount);
+            // Requirement 6.3.3
             if (retryCount > 2) {
                 print_with_timestamp("Retry limit exceeded. Turning off LED, sending Mail & exiting...\n");
                 turnOffLED();

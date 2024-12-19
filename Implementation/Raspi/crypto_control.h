@@ -5,11 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <openssl/aes.h>
-<<<<<<< HEAD
 #include <openssl/sha.h>
 
-=======
->>>>>>> adea0023f5c375dfcd32ecb78233ae5518a6c95d
 
 // Funktionsprototypen
 
@@ -38,7 +35,6 @@ void aes_encrypt(
 );
 
 /**
-<<<<<<< HEAD
  * @brief Calculates the HMAC of a given input using a provided key.
  * @param data The input data for which HMAC is to be calculated.
  * @param data_length The length of the input data.
@@ -50,8 +46,6 @@ void calculate_hmac(const unsigned char *data, int data_length, unsigned char *o
                     const unsigned char *key, int key_length);
 
 /**
-=======
->>>>>>> adea0023f5c375dfcd32ecb78233ae5518a6c95d
  * @brief Funktion zur AES-Entschlüsselung im CBC-Modus mit 128-Bit-Schlüssel
  * @param encrypted_data Die verschlüsselten Daten (Ciphertext)
  * @param encrypted_length Die Länge der verschlüsselten Daten
@@ -67,7 +61,6 @@ void aes_decrypt(
     const unsigned char *iv               // 16-Byte-Initialisierungsvektor
 );
 
-<<<<<<< HEAD
 void decrypt_ciphertext(
     const unsigned char *encrypted_data, // Eingabedaten (Ciphertext + HMAC)
     int data_length,                     // Gesamtlänge der verschlüsselten Daten inkl. HMAC
@@ -83,6 +76,4 @@ void printUnsignedCharArray(const unsigned char *array, size_t length);
 
 
 
-=======
->>>>>>> adea0023f5c375dfcd32ecb78233ae5518a6c95d
 #endif // AES_CRYPT_H

@@ -1,3 +1,4 @@
+// implements mailing control
 #include <stdio.h>
 #include <string.h>
 #include <curl/curl.h>
@@ -8,26 +9,27 @@
 #define FROM_MAIL "Raspi Room Ventilation" FROM_ADDR
 #define TO_MAIL	"CO2 Admin" TO_ADDR
 #define CC_MAIL "Patrick Neumann" CC_ADDR
- 
+
+// mail payload
 static const char *payload_text[] = {
   "Date: Mon, 29 Nov 2010 21:54:29 +1100\r\n",
   "To: " TO_MAIL "\r\n",
   "From: " FROM_MAIL "\r\n",
   "Cc: " CC_MAIL "\r\n",
   "Subject: CO2 Alarm message\r\n",
-  "\r\n", /* empty line to divide headers from body, see RFC5322 */ 
+  "\r\n",
   "CO2 Alarm\r\n",
   "\r\n",
   "Room Number 12. CO2 Alarm.\r\n",
   "Check CO2\r\n",
   NULL
 };
- 
+
 struct upload_status {
   int lines_read;
 };
 
-
+// controls payload
 static size_t payload_source(void *ptr, size_t size, size_t nmemb, void *userp)
 {
   struct upload_status *upload_ctx = (struct upload_status *)userp;
@@ -49,6 +51,8 @@ static size_t payload_source(void *ptr, size_t size, size_t nmemb, void *userp)
  
   return 0;
 }
+
+// sends mail
 int sendMail(void)
 {
   CURL *curl;

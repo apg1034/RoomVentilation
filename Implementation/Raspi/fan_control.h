@@ -13,5 +13,7 @@ void initializeFanMotor();              // Function to initialize the fan motor
 void rotateFanMotor(int steps, int direction);  // Function to rotate the fan motor in steps
 void startFan();                        // Function to start the fan motor
 void stopFan();                         // Function to stop the fan motor
+void startFanBackground();  // Add this prototype
+void stopFanBackground();   // Add this prototype
 
 #endif // FAN_CONTROL_H

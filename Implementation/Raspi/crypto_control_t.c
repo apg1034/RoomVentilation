@@ -1,3 +1,4 @@
+// implements all necessary cryptographic funcions
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

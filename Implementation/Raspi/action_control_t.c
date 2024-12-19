@@ -1,3 +1,4 @@
+// controls the window & fan
 #include "encoder_control.h"
 #include "constants.h"
 #include "action_control.h"
@@ -17,6 +18,7 @@ typedef enum {
 // Global variable to track the state of the window
 static WindowState currentWindowState = WINDOW_IDLE;
 
+// calibrates the windows position
 void calibrateWindowPosition() {
     printf("Calibrating window position...\n");
     
@@ -43,10 +45,19 @@ void calibrateWindowPosition() {
 }
 
 
+// sets action based on state
 void setAction(int value) {
     int current_position = getEncoderPosition(); // Get the current encoder position
     printf("Current Encoder Position: %d\n", current_position);
-   
+
+     time_t now = time(NULL);
+     char timestamp[20];
+     strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", localtime(&now));
+
+     FILE* logFile = fopen("logging.log", "a");
+     fprintf(logFile, "[%s] : set action %d \n", timestamp, value);
+     fclose(logFile);
+
     // Handle the OPEN action
     if (value >= OPEN_THRESHOLD) {
         if (currentWindowState != WINDOW_OPEN) { // Only open if not already open
@@ -55,7 +66,6 @@ void setAction(int value) {
             currentWindowState = WINDOW_OPEN; // Update the state
             startFan();
             actionOpen();
-
         } else {
             printf("Window already fully open. No action taken.\n");
         }
@@ -79,6 +89,7 @@ void setAction(int value) {
     }
 }
 
+// opens the window
 void actionOpen() {
 int current_position = getEncoderPosition();
     printf("Opening window. Initial Encoder Position: %d\n", current_position);
@@ -109,6 +120,7 @@ int current_position = getEncoderPosition();
     }
 }
 
+// closes the window
 void actionClose() {
     int current_position = getEncoderPosition();
     printf("Closing window. Initial Encoder Position: %d\n", current_position);

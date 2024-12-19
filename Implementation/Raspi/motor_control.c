@@ -1,3 +1,4 @@
+// implements stepper motor control
 #include "constants.h"
 #include <unistd.h>
 #include <stdio.h>
@@ -17,6 +18,7 @@ int step_sequence[8][4] = {
     {1, 0, 0, 1}
 };
 
+// initializes Motor
 void initializeMotor() {
     // Initialize wiringPi
     wiringPiSetupGpio(); // Use BCM GPIO numbering
@@ -30,6 +32,7 @@ void initializeMotor() {
 
 }
 
+// rotates Motor
 void rotateMotor(int steps, int direction) {
     unsigned long stepStartTime;
     unsigned long stepInterval = 1;
@@ -52,14 +55,31 @@ void rotateMotor(int steps, int direction) {
     }
 }
 
+// rotates motor till threshold
 void rotateMotorWithThreshold(int direction, int threshold) {
     printf("Starting motor rotation towards threshold: %d\n", threshold);
 
-    while ((direction > 0 && getEncoderPosition() < threshold) ||
-           (direction < 0 && getEncoderPosition() > threshold)) {
-        rotateMotor(1, direction); // Rotate one step
-        printf("Encoder Position: %d\n", getEncoderPosition());
+    int last_position = -1; // Keep track of the last printed position
+    int current_position;
+
+    unsigned long last_update_time = millis(); // Track the last time the motor was updated
+    unsigned long step_interval = 10;         // Time interval between updates (in milliseconds)
+
+    while ((direction > 0 && (current_position = getEncoderPosition()) < threshold) || // Use < instead of <=
+           (direction < 0 && (current_position = getEncoderPosition()) > threshold)) { // Use > instead of >=
+        // Check if it's time to step the motor
+        if (millis() - last_update_time >= step_interval) {
+            rotateMotor(1, direction); // Rotate one step
+            last_update_time = millis(); // Update the last update time
+        }
+
+        // Print encoder position only when it changes
+       if (current_position != last_position) {
+         printf("Encoder Position: %d\n", current_position);
+           last_position = current_position; // Update the last printed position
+       }
     }
 
-    printf("Threshold reached. Final Encoder Position: %d\n", getEncoderPosition());
+    // Explicitly print the threshold position if the loop exits
+    printf("Threshold reached. Final Encoder Position: %d\n", threshold);
 }
